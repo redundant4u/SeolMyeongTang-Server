@@ -1,0 +1,19 @@
+@local=http://localhost:3000
+
+###
+GET {{local}}/notion/database
+
+###
+GET {{local}}/notion/page/123
+
+###
+GET {{local}}/notion/page/65adf308-ae79-49c9-9ff9-c3e7ebc5e258
+
+###
+GET {{local}}/notion/blocks/ef2b9493-8d18-47b7-adf4-1abd1a66fe4b
+
+###
+GET {{local}}/notion/blocks/6a90da0b-6679-4491-b116-7727a56b5772
+
+###
+GET {{local}}/notion/blocks/6a90da0b-6679-4491-b116-7727a56b5772
