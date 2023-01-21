@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import * as Joi from 'joi';
-import { NotionModule } from './notion/notion.module';
+import { NotionModule } from '@notion/notion.module';
+import { HealthModule } from '@health/health.module';
 
 @Module({
     imports: [
@@ -14,6 +15,7 @@ import { NotionModule } from './notion/notion.module';
             }),
         }),
         NotionModule,
+        HealthModule,
     ],
 })
 export class AppModule {}

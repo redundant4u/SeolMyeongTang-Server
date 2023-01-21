@@ -1070,31 +1070,31 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@prisma/client@npm:^4.8.0":
-  version: 4.8.0
-  resolution: "@prisma/client@npm:4.8.0"
+"@prisma/client@npm:^4.9.0":
+  version: 4.9.0
+  resolution: "@prisma/client@npm:4.9.0"
   dependencies:
-    "@prisma/engines-version": 4.8.0-61.d6e67a83f971b175a593ccc12e15c4a757f93ffe
+    "@prisma/engines-version": 4.9.0-42.ceb5c99003b99c9ee2c1d2e618e359c14aef2ea5
   peerDependencies:
     prisma: "*"
   peerDependenciesMeta:
     prisma:
       optional: true
-  checksum: c0256721bd4e07fb1fdf4d0857489379769af1eaac0aec79387e32092e63e1246a95fef634f6c07bf1bdddc7c11f3e073c78e5c92b9a708f559773a3f656f94a
+  checksum: 54c4fc3fde67d21567ead0e22e66d3258c2045f274b465781b89e4f258f1a6431c4c83e3371e71661f2c7ccdf4cf24169002e40e378c7384f99aefe8dfb81be1
   languageName: node
   linkType: hard
 
-"@prisma/engines-version@npm:4.8.0-61.d6e67a83f971b175a593ccc12e15c4a757f93ffe":
-  version: 4.8.0-61.d6e67a83f971b175a593ccc12e15c4a757f93ffe
-  resolution: "@prisma/engines-version@npm:4.8.0-61.d6e67a83f971b175a593ccc12e15c4a757f93ffe"
-  checksum: 839c9ecaad0b3b64bf0a641c3cb4103237b8e0e1f23c5ba47fdabaab853590f765e5323fb664588f954be56cd6c1a19c1a01617cd826c48a5e9221f3e82b2a28
+"@prisma/engines-version@npm:4.9.0-42.ceb5c99003b99c9ee2c1d2e618e359c14aef2ea5":
+  version: 4.9.0-42.ceb5c99003b99c9ee2c1d2e618e359c14aef2ea5
+  resolution: "@prisma/engines-version@npm:4.9.0-42.ceb5c99003b99c9ee2c1d2e618e359c14aef2ea5"
+  checksum: b7b1a41acd8c761ea8111e0d9562623d0735c58546594626de1bd4b35e09122f210e0c4727aa0775b53e5222d8ed1c0fa822e0a8c4ba72271e854532f52a2416
   languageName: node
   linkType: hard
 
-"@prisma/engines@npm:4.8.0":
-  version: 4.8.0
-  resolution: "@prisma/engines@npm:4.8.0"
-  checksum: 5c1198905d7bf850c02cd59f244055003fc2a03ce99e715a0a872f568fb024aa4b347804829c8630964ff41b64cf8fa3e08c8cd2a444ad29c215c4b1dd9701b0
+"@prisma/engines@npm:4.9.0":
+  version: 4.9.0
+  resolution: "@prisma/engines@npm:4.9.0"
+  checksum: b73306b3e34ebb544f797342cb594f4a73602c6e63961e31e9158f02afdfc209f2cc1d59ae87cbb0165b3dff58eaa145c601ac2a1cfc460e8e439cea8425a3ed
   languageName: node
   linkType: hard
 
@@ -2573,6 +2573,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"commander@npm:^9.0.0":
+  version: 9.5.0
+  resolution: "commander@npm:9.5.0"
+  checksum: c7a3e27aa59e913b54a1bafd366b88650bc41d6651f0cbe258d4ff09d43d6a7394232a4dadd0bf518b3e696fdf595db1028a0d82c785b88bd61f8a440cecfade
+  languageName: node
+  linkType: hard
+
 "component-emitter@npm:^1.3.0":
   version: 1.3.0
   resolution: "component-emitter@npm:1.3.0"
@@ -3703,7 +3710,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"globby@npm:^11.1.0":
+"globby@npm:^11.0.4, globby@npm:^11.1.0":
   version: 11.1.0
   resolution: "globby@npm:11.1.0"
   dependencies:
@@ -5185,6 +5192,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"mylas@npm:^2.1.9":
+  version: 2.1.13
+  resolution: "mylas@npm:2.1.13"
+  checksum: f861d092137a9ac268cba88042392a5dc2a290eed5c8543954eae849d85e5961332211161d2c08c3644ad893f20dbe9de89b07f5dc027f1f92f13f2d38f4b81f
+  languageName: node
+  linkType: hard
+
 "natural-compare-lite@npm:^1.4.0":
   version: 1.4.0
   resolution: "natural-compare-lite@npm:1.4.0"
@@ -5571,6 +5585,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"plimit-lit@npm:^1.2.6":
+  version: 1.5.0
+  resolution: "plimit-lit@npm:1.5.0"
+  dependencies:
+    queue-lit: ^1.5.0
+  checksum: a956e4e5e515a980403ca840b00c9e2381710a3a30e60e0e38f76b7842b24a345c9e59ef03568cb5925b4e9cdf67c088008148febec59e55bd47d1cb4003b024
+  languageName: node
+  linkType: hard
+
 "pluralize@npm:8.0.0":
   version: 8.0.0
   resolution: "pluralize@npm:8.0.0"
@@ -5615,15 +5638,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prisma@npm:^4.8.0":
-  version: 4.8.0
-  resolution: "prisma@npm:4.8.0"
+"prisma@npm:^4.9.0":
+  version: 4.9.0
+  resolution: "prisma@npm:4.9.0"
   dependencies:
-    "@prisma/engines": 4.8.0
+    "@prisma/engines": 4.9.0
   bin:
     prisma: build/index.js
     prisma2: build/index.js
-  checksum: 22ebaa32c51fb2938626d742d9ae68be5ad49a44dad2046bfe40439a64d06e8f84d4915f66100554d7840c3c5228c6b5c4216d9f5a698d5dd11a46ab528654cf
+  checksum: 82f680008a61824a40f3daae9e0e5766f33d28c6641d04e0ee0918c2cb42110579187f3fce2d08ec8baa1124b3115229e9d83d7f64987bf46f6403f56b07e711
   languageName: node
   linkType: hard
 
@@ -5694,6 +5717,13 @@ __metadata:
   dependencies:
     side-channel: ^1.0.4
   checksum: 6e1f29dd5385f7488ec74ac7b6c92f4d09a90408882d0c208414a34dd33badc1a621019d4c799a3df15ab9b1d0292f97c1dd71dc7c045e69f81a8064e5af7297
+  languageName: node
+  linkType: hard
+
+"queue-lit@npm:^1.5.0":
+  version: 1.5.0
+  resolution: "queue-lit@npm:1.5.0"
+  checksum: 2e714b74072e1be9bd76356710af1d3b03763859f466a10ed74f36b5ccc524dbd0d299239adfc5cbd3a4a416c5fc69cf4af34f13ef4f95f6da70cad12cb79771
   languageName: node
   linkType: hard
 
@@ -6021,7 +6051,7 @@ __metadata:
     "@nestjs/schematics": ^9.0.0
     "@nestjs/testing": ^9.0.0
     "@notionhq/client": ^2.2.3
-    "@prisma/client": ^4.8.0
+    "@prisma/client": ^4.9.0
     "@types/express": ^4.17.13
     "@types/jest": 28.1.8
     "@types/node": ^16.0.0
@@ -6036,7 +6066,7 @@ __metadata:
     jest: 28.1.3
     joi: ^17.7.0
     prettier: ^2.3.2
-    prisma: ^4.8.0
+    prisma: ^4.9.0
     reflect-metadata: ^0.1.13
     rimraf: ^3.0.2
     rxjs: ^7.2.0
@@ -6045,6 +6075,7 @@ __metadata:
     ts-jest: 28.0.8
     ts-loader: ^9.2.3
     ts-node: ^10.0.0
+    tsc-alias: ^1.8.2
     tsconfig-paths: 4.1.0
     typescript: ^4.7.4
   languageName: unknown
@@ -6639,6 +6670,22 @@ __metadata:
     ts-node-transpile-only: dist/bin-transpile.js
     ts-script: dist/bin-script-deprecated.js
   checksum: 090adff1302ab20bd3486e6b4799e90f97726ed39e02b39e566f8ab674fd5bd5f727f43615debbfc580d33c6d9d1c6b1b3ce7d8e3cca3e20530a145ffa232c35
+  languageName: node
+  linkType: hard
+
+"tsc-alias@npm:^1.8.2":
+  version: 1.8.2
+  resolution: "tsc-alias@npm:1.8.2"
+  dependencies:
+    chokidar: ^3.5.3
+    commander: ^9.0.0
+    globby: ^11.0.4
+    mylas: ^2.1.9
+    normalize-path: ^3.0.0
+    plimit-lit: ^1.2.6
+  bin:
+    tsc-alias: dist/bin/index.js
+  checksum: d3a45982d521bb4550a71c291028cf819ee5a6e2e3c0eb3dfe36886f0f4e265a4dbf589dbcebb2e03215695a9081974715a543100176caed389e9d32c3ba0c50
   languageName: node
   linkType: hard
 

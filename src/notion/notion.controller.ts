@@ -1,5 +1,4 @@
-import { Body, Controller, Get, Param } from '@nestjs/common';
-import { GetPageRequestDto } from './getPage.request.dto';
+import { Controller, Get, Param } from '@nestjs/common';
 import { NotionService } from './notion.service';
 
 @Controller('notion')
