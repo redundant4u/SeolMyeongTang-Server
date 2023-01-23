@@ -1,0 +1,10 @@
+version: "3.5"
+
+services:
+  server:
+    container_name: smt-server
+    image: smt-server:prod
+    ports:
+      - 3000:3000
+    environment:
+      - NODE_ENV=prod

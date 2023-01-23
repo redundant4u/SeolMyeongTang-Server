@@ -1,0 +1,61 @@
+name: Deploy SeolMyeongTang Server
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deployment:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
+      - name: Login to ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: "16"
+
+      - name: Create Env File
+        run: |
+          touch .env
+          echo '${{ secrets.ENV }}' >> .env
+
+      - name: Make Docker Image
+        run: docker build -t smt-server:${GITHUB_SHA::8} -f deployment/node.dockerfile .
+
+      - name: Tag Docker Image
+        run: |
+          docker tag \
+            smt-server:${GITHUB_SHA::8} \
+            ${{ steps.login-ecr.outputs.registry }}/smt-server:${GITHUB_SHA::8}
+
+      - name: Push Docker Image to ECR
+        run: |
+          docker push \
+             ${{ steps.login-ecr.outputs.registry }}/smt-server:${GITHUB_SHA::8}
+
+      - name: Deploy
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          port: ${{ secrets.PORT }}
+          key: ${{ secrets.KEY }}
+          envs: GITHUB_SHA
+          script: |
+            cd ~/SeolMyeongTang-Server
+            ./deploy.sh ${GITHUB_SHA::8}
