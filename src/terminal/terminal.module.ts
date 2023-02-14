@@ -1,5 +1,5 @@
 import { Logger, Module } from '@nestjs/common';
-import { TerminalGateway } from './terminal.gateway';
+import TerminalGateway from './terminal.gateway';
 
 @Module({
     providers: [TerminalGateway],

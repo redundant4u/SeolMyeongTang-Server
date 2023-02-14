@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import * as Joi from 'joi';
 import { NotionModule } from '@notion/notion.module';
 import { HealthModule } from '@health/health.module';
+import { TerminalModule } from './terminal/terminal.module';
 
 @Module({
     imports: [
@@ -16,6 +17,7 @@ import { HealthModule } from '@health/health.module';
         }),
         NotionModule,
         HealthModule,
+        TerminalModule,
     ],
 })
 export class AppModule {}

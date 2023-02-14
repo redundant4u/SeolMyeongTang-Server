@@ -1,33 +1,38 @@
 import { Logger } from '@nestjs/common';
 import {
     ConnectedSocket,
+    MessageBody,
     OnGatewayConnection,
     OnGatewayDisconnect,
     SubscribeMessage,
     WebSocketGateway,
-    WebSocketServer,
 } from '@nestjs/websockets';
-import { Server, Socket } from 'socket.io';
+import { Socket } from 'socket.io';
+import { Pty } from './Pty';
 
 @WebSocketGateway(3002, {
     namespace: 'terminal',
     cors: { origin: ['http://localhost:3001'] },
     transports: ['websocket'],
 })
-export class TerminalGateway implements OnGatewayConnection, OnGatewayDisconnect {
-    @WebSocketServer()
-    server: Server;
+export default class TerminalGateway implements OnGatewayConnection, OnGatewayDisconnect {
+    pty: Pty;
 
     handleConnection(@ConnectedSocket() socket: Socket) {
-        Logger.log(`hello ${socket}`);
+        Logger.log(`connect: ${socket.id}`);
     }
 
     handleDisconnect(@ConnectedSocket() socket: Socket) {
-        Logger.log(`bye ${socket}`);
+        Logger.log(`disconnect: ${socket.id}`);
     }
 
     @SubscribeMessage('init')
-    handleInit(@ConnectedSocket() socket: Socket) {
-        Logger.log(`init ${socket}`);
+    init(@ConnectedSocket() socket: Socket) {
+        this.pty = new Pty(socket);
+    }
+
+    @SubscribeMessage('input')
+    write(_, @MessageBody() data: string) {
+        this.pty.write(data);
     }
 }
