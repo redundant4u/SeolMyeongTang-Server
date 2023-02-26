@@ -2,15 +2,15 @@ import { IPty, spawn } from 'node-pty';
 import { Socket } from 'socket.io';
 
 export class Pty {
-    socket: Socket;
-    shell: string;
-    pty: IPty;
+    private readonly socket: Socket;
+    private readonly shell: string;
+    private readonly pty: IPty;
 
     constructor(socket: Socket) {
         this.socket = socket;
-        this.shell = process.platform === 'win32' ? 'cmd.exe' : 'bash';
+        this.shell = 'docker';
 
-        this.pty = spawn(this.shell, [], {
+        this.pty = spawn(this.shell, ['exec', '-it', 'terminal', 'rbash'], {
             name: 'terminal',
             cwd: process.env.HOME,
         });

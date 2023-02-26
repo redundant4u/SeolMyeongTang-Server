@@ -1,0 +1,4 @@
+cat about
+
+export PATH="/home/seol/bin"
+export PS1=">> "

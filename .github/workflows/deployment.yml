@@ -35,7 +35,7 @@ jobs:
           echo '${{ secrets.ENV }}' >> .env
 
       - name: Make Docker Image
-        run: docker build -t smt-server:${GITHUB_SHA::8} -f deployment/node.dockerfile .
+        run: docker build -t smt-server:${GITHUB_SHA::8} -f deployment/node/node.dockerfile .
 
       - name: Tag Docker Image
         run: |

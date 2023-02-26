@@ -10,7 +10,6 @@ RUN apk add --no-cache tzdata && \
 
 COPY . .
 
-RUN yarn set version berry
 RUN yarn install --immutable --immutable-cache
 
 RUN yarn build

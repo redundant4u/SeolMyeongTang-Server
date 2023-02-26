@@ -8,3 +8,12 @@ services:
       - 3000:3000
     environment:
       - NODE_ENV=prod
+      
+  terminal:
+    container_name: terminal
+    image: terminal:prod
+    deploy:
+      resources:
+        limits:
+          cpus: 0.1
+          memory: 16M
