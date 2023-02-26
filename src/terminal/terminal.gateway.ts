@@ -12,7 +12,7 @@ import { Pty } from './Pty';
 
 @WebSocketGateway(3002, {
     namespace: 'terminal',
-    cors: { origin: ['http://localhost:3001'] },
+    cors: { origin: ['https://redundant4u.com'] },
     transports: ['websocket'],
 })
 export default class TerminalGateway implements OnGatewayConnection, OnGatewayDisconnect {
