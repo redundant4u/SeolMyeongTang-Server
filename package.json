@@ -14,12 +14,12 @@
         "test": "jest --config ./test/jest.config.json --runInBand"
     },
     "dependencies": {
-        "@nestjs/common": "^9.3.8",
+        "@nestjs/common": "^9.3.9",
         "@nestjs/config": "^2.3.1",
-        "@nestjs/core": "^9.3.8",
-        "@nestjs/platform-express": "^9.0.0",
-        "@nestjs/platform-socket.io": "^9.3.8",
-        "@nestjs/websockets": "^9.3.7",
+        "@nestjs/core": "^9.3.9",
+        "@nestjs/platform-express": "^9.3.9",
+        "@nestjs/platform-socket.io": "^9.3.9",
+        "@nestjs/websockets": "^9.3.9",
         "@notionhq/client": "^2.2.3",
         "class-transformer": "^0.5.1",
         "class-validator": "^0.14.0",
@@ -30,7 +30,7 @@
         "rxjs": "^7.2.0"
     },
     "devDependencies": {
-        "@nestjs/cli": "^9.0.0",
+        "@nestjs/cli": "^9.2.0",
         "@nestjs/schematics": "^9.0.0",
         "@nestjs/testing": "^9.0.0",
         "@types/express": "^4.17.13",
