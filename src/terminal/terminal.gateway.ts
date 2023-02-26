@@ -8,7 +8,7 @@ import {
     WebSocketGateway,
 } from '@nestjs/websockets';
 import { Socket } from 'socket.io';
-import { Pty } from './Pty';
+import { Pty } from './pty';
 
 @WebSocketGateway(3002, {
     namespace: 'terminal',
