@@ -10,7 +10,7 @@ import {
 import { Socket } from 'socket.io';
 import { Pty } from './pty';
 
-@WebSocketGateway(3002, {
+@WebSocketGateway({
     namespace: 'terminal',
     cors: { origin: ['https://redundant4u.com'] },
     transports: ['websocket'],
