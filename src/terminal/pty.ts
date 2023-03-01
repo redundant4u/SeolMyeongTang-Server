@@ -8,9 +8,9 @@ export class Pty {
 
     constructor(socket: Socket) {
         this.socket = socket;
-        this.shell = 'docker';
+        this.shell = 'ssh';
 
-        this.pty = spawn(this.shell, ['exec', '-it', 'terminal', 'rbash'], {
+        this.pty = spawn(this.shell, ['terminal'], {
             name: 'terminal',
             cwd: process.env.HOME,
         });
