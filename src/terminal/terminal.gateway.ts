@@ -12,9 +12,9 @@ export default class TerminalGateway implements OnGatewayConnection, OnGatewayDi
     private ptys: Map<string, IPty> = new Map();
 
     handleConnection(@ConnectedSocket() socket: Socket) {
-        Logger.log(`connect: ${socket.id}`);
+        Logger.log(`[Socket Connect]: ${socket.id}`);
 
-        const pty = spawn('docker', ['exec', '-it', 'terminal', 'bash'], {
+        const pty = spawn('ssh', ['terminal'], {
             name: 'xterm-color',
             cwd: process.env.HOME,
         });
@@ -36,7 +36,7 @@ export default class TerminalGateway implements OnGatewayConnection, OnGatewayDi
     }
 
     handleDisconnect(@ConnectedSocket() socket: Socket) {
-        Logger.log(`disconnect: ${socket.id}`);
+        Logger.log(`[Socket Disconnect]: ${socket.id}`);
 
         const { id } = socket;
         const pty = this.ptys.get(id);
