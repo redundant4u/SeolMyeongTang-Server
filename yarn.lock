@@ -3047,24 +3047,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"engine.io@npm:~6.4.1":
-  version: 6.4.1
-  resolution: "engine.io@npm:6.4.1"
-  dependencies:
-    "@types/cookie": ^0.4.1
-    "@types/cors": ^2.8.12
-    "@types/node": ">=10.0.0"
-    accepts: ~1.3.4
-    base64id: 2.0.0
-    cookie: ~0.4.1
-    cors: ~2.8.5
-    debug: ~4.3.1
-    engine.io-parser: ~5.0.3
-    ws: ~8.11.0
-  checksum: b3921c35911d18b851153b97c1ad49f24ae068f01ddc17cd4d40b47a581d1317a8a1ed62665f63d07d076366b926b08a185d672573fedd186ee3304f9fa542d2
-  languageName: node
-  linkType: hard
-
 "enhanced-resolve@npm:^5.0.0, enhanced-resolve@npm:^5.10.0, enhanced-resolve@npm:^5.7.0":
   version: 5.12.0
   resolution: "enhanced-resolve@npm:5.12.0"
@@ -5453,13 +5435,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"node-pty@npm:0.11.0-beta29":
-  version: 0.11.0-beta29
-  resolution: "node-pty@npm:0.11.0-beta29"
+"node-pty@npm:0.11.0-beta30":
+  version: 0.11.0-beta30
+  resolution: "node-pty@npm:0.11.0-beta30"
   dependencies:
     nan: ^2.17.0
     node-gyp: latest
-  checksum: f60056103ed0d7fc28a5e271b5b2bfc3bd30cf8556b0282daf56c045889e95d21e4bb4f7fe0df6cce0de49ad51e2faf3859c59dc5e9b800f9ece8d6cd3645b97
+  checksum: e71a43015d4199c9f1bedb03e2aae665f5a7565034e98d23e4b7f73dcf47ecbc4d99284d9fdfccc49388961bad8a6bcdd81ae45eeaec11ef66f9be243a01b550
   languageName: node
   linkType: hard
 
@@ -6243,16 +6225,14 @@ __metadata:
     eslint-plugin-prettier: ^4.0.0
     jest: 28.1.3
     joi: ^17.7.0
-    node-pty: 0.11.0-beta29
+    node-pty: 0.11.0-beta30
     prettier: ^2.3.2
     reflect-metadata: ^0.1.13
-    rimraf: ^3.0.2
     rxjs: ^7.2.0
-    socket.io: ^4.6.1
     source-map-support: ^0.5.20
     supertest: ^6.1.3
     ts-jest: 28.0.8
-    ts-loader: ^9.2.3
+    ts-loader: ^9.4.2
     ts-node: ^10.0.0
     tsc-alias: ^1.8.2
     tsconfig-paths: 4.1.0
@@ -6393,20 +6373,6 @@ __metadata:
     socket.io-adapter: ~2.5.2
     socket.io-parser: ~4.2.1
   checksum: 4fbd850537f52da301111d809e631afec0352b8001a1121851441c3baca3a5351b3aabdd9538da8b9cf491fb35b1137197dda57a58fea61e8046aa80008616d0
-  languageName: node
-  linkType: hard
-
-"socket.io@npm:^4.6.1":
-  version: 4.6.1
-  resolution: "socket.io@npm:4.6.1"
-  dependencies:
-    accepts: ~1.3.4
-    base64id: ~2.0.0
-    debug: ~4.3.2
-    engine.io: ~6.4.1
-    socket.io-adapter: ~2.5.2
-    socket.io-parser: ~4.2.1
-  checksum: 447941727142669b3709c3ae59ed790a2c3ad312d935400e2e25fdf59a95cdc92ebcf6b000ab2042a2a77ae51bb87598b40845a8d3b1f6ea6a0dd1df9c8f8459
   languageName: node
   linkType: hard
 
@@ -6846,7 +6812,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ts-loader@npm:^9.2.3":
+"ts-loader@npm:^9.4.2":
   version: 9.4.2
   resolution: "ts-loader@npm:9.4.2"
   dependencies:
