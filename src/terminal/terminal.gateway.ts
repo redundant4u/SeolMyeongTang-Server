@@ -1,5 +1,11 @@
 import { Logger } from '@nestjs/common';
-import { ConnectedSocket, OnGatewayConnection, OnGatewayDisconnect, WebSocketGateway } from '@nestjs/websockets';
+import {
+    ConnectedSocket,
+    OnGatewayConnection,
+    OnGatewayDisconnect,
+    SubscribeMessage,
+    WebSocketGateway,
+} from '@nestjs/websockets';
 import { IPty, spawn } from 'node-pty';
 import { Socket } from 'socket.io';
 
@@ -13,7 +19,22 @@ export default class TerminalGateway implements OnGatewayConnection, OnGatewayDi
 
     handleConnection(@ConnectedSocket() socket: Socket) {
         Logger.log(`[Socket Connect]: ${socket.id}`);
+    }
 
+    handleDisconnect(@ConnectedSocket() socket: Socket) {
+        Logger.log(`[Socket Disconnect]: ${socket.id}`);
+
+        const { id } = socket;
+        const pty = this.ptys.get(id);
+
+        if (pty) {
+            pty.kill();
+            this.ptys.delete(id);
+        }
+    }
+
+    @SubscribeMessage('init')
+    init(@ConnectedSocket() socket: Socket) {
         const pty = spawn('ssh', ['terminal'], {
             name: 'xterm-color',
             cwd: process.env.HOME,
@@ -33,17 +54,5 @@ export default class TerminalGateway implements OnGatewayConnection, OnGatewayDi
                 pty.write(data);
             }
         });
-    }
-
-    handleDisconnect(@ConnectedSocket() socket: Socket) {
-        Logger.log(`[Socket Disconnect]: ${socket.id}`);
-
-        const { id } = socket;
-        const pty = this.ptys.get(id);
-
-        if (pty) {
-            pty.kill();
-            this.ptys.delete(id);
-        }
     }
 }
