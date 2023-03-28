@@ -18,8 +18,11 @@
         "forceConsistentCasingInFileNames": false,
         "noFallthroughCasesInSwitch": false,
         "paths": {
-            "@notion/*": ["./src/notion/*"],
-            "@health/*": ["./src/health/*"]
-        }
+            "@health/*": ["src/healthz/*"],
+            "@db/*": ["src/db/*"],
+            "@post/*": ["src/post/*"],
+            "@common/*": ["src/common/*"]
+        },
+        "lib": ["ES2021.String"]
     }
 }

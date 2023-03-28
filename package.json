@@ -14,17 +14,18 @@
         "test": "jest --config ./test/jest.config.json --runInBand"
     },
     "dependencies": {
+        "@aws-sdk/client-dynamodb": "^3.300.0",
+        "@aws-sdk/util-dynamodb": "^3.300.0",
         "@nestjs/common": "^9.3.9",
         "@nestjs/config": "^2.3.1",
         "@nestjs/core": "^9.3.9",
         "@nestjs/platform-express": "^9.3.9",
         "@nestjs/platform-socket.io": "^9.3.9",
         "@nestjs/websockets": "^9.3.9",
-        "@notionhq/client": "^2.2.3",
         "class-transformer": "^0.5.1",
         "class-validator": "^0.14.0",
         "joi": "^17.7.0",
-        "node-pty": "0.11.0-beta30",
+        "node-pty": "0.11.0-beta31",
         "reflect-metadata": "^0.1.13",
         "rxjs": "^7.2.0",
         "socket.io": "^4.6.1"
