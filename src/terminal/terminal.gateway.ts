@@ -1,18 +1,18 @@
-import { Logger } from '@nestjs/common';
+import { Logger } from "@nestjs/common";
 import {
     ConnectedSocket,
     OnGatewayConnection,
     OnGatewayDisconnect,
     SubscribeMessage,
     WebSocketGateway,
-} from '@nestjs/websockets';
-import { IPty, spawn } from 'node-pty';
-import { Socket } from 'socket.io';
+} from "@nestjs/websockets";
+import { IPty, spawn } from "node-pty";
+import { Socket } from "socket.io";
 
 @WebSocketGateway({
-    namespace: 'terminal',
-    cors: { origin: ['https://redundant4u.com'] },
-    transports: ['websocket'],
+    namespace: "terminal",
+    cors: { origin: ["https://redundant4u.com"] },
+    transports: ["websocket"],
 })
 export default class TerminalGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private ptys: Map<string, IPty> = new Map();
@@ -33,21 +33,21 @@ export default class TerminalGateway implements OnGatewayConnection, OnGatewayDi
         }
     }
 
-    @SubscribeMessage('init')
+    @SubscribeMessage("init")
     init(@ConnectedSocket() socket: Socket) {
-        const pty = spawn('ssh', ['terminal'], {
-            name: 'xterm-color',
+        const pty = spawn("ssh", ["terminal"], {
+            name: "xterm-color",
             cwd: process.env.HOME,
         });
 
         pty.onData((data) => {
-            socket.emit('output', data);
+            socket.emit("output", data);
         });
 
         const { id } = socket;
         this.ptys.set(id, pty);
 
-        socket.on('input', (data) => {
+        socket.on("input", (data) => {
             const pty = this.ptys.get(id);
 
             if (pty) {
