@@ -18,7 +18,7 @@ func router(ctx context.Context, req events.APIGatewayProxyRequest) (events.APIG
 }
 
 func get(ctx context.Context, req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-	postId, ok := req.QueryStringParameters["postId"]
+	postId, ok := req.PathParameters["postId"]
 
 	if !ok {
 		return getPosts(ctx)
@@ -37,7 +37,10 @@ func getPosts(ctx context.Context) (events.APIGatewayProxyResponse, error) {
 	return events.APIGatewayProxyResponse{
 		StatusCode: 200,
 		Headers: map[string]string{
-			"Content-Type": "application/json",
+			"Access-Control-Allow-Origin":  "*",
+			"Access-Control-Allow-Methods": "OPTIONS,GET",
+			"Access-Control-Allow-Headers": "Content-Type",
+			"Content-Type":                 "application/json",
 		},
 		Body: string(body),
 	}, nil
@@ -57,7 +60,10 @@ func getPost(ctx context.Context, postId string) (events.APIGatewayProxyResponse
 	return events.APIGatewayProxyResponse{
 		StatusCode: 200,
 		Headers: map[string]string{
-			"Content-Type": "application/json",
+			"Access-Control-Allow-Origin":  "*",
+			"Access-Control-Allow-Methods": "OPTIONS,GET",
+			"Access-Control-Allow-Headers": "Content-Type",
+			"Content-Type":                 "application/json",
 		},
 		Body: string(body),
 	}, nil

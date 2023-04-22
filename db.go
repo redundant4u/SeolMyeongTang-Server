@@ -20,12 +20,14 @@ var db dynamodb.Client
 
 type post struct {
 	Title     string
+	SK        string
 	Content   string
 	CreatedAt string
 }
 
 type postWithoutContent struct {
 	Title     string
+	SK        string
 	CreatedAt string
 }
 
