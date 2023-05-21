@@ -1,4 +1,4 @@
-package main
+package internal
 
 import (
 	"log"
@@ -15,7 +15,7 @@ func httpException(status int, msg string) (events.APIGatewayProxyResponse, erro
 
 func errCheck(msg string, err error) {
 	if err != nil {
-		log.Fatalf(msg)
+		log.Fatalf(msg, err)
 		panic(err)
 	}
 }

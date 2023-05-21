@@ -1,14 +1,16 @@
-package main
+package internal
 
 import (
 	"context"
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"github.com/aws/aws-lambda-go/events"
 )
 
-func router(ctx context.Context, req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+func Router(ctx context.Context, req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+	log.Default().Println("222")
 	switch req.HTTPMethod {
 	case "GET":
 		return get(ctx, req)
