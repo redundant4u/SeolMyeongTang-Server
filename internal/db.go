@@ -2,7 +2,6 @@ package internal
 
 import (
 	"context"
-	"log"
 	"os"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -41,7 +40,7 @@ func init() {
 		customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
 			if service == dynamodb.ServiceID {
 				return aws.Endpoint{
-					URL: "http://localhost:8000",
+					URL: "http://host.docker.internal:8000",
 				}, nil
 			}
 			// returning EndpointNotFoundError will allow the service to fallback to it's default resolution
@@ -55,6 +54,10 @@ func init() {
 				SessionToken:    "local",
 			},
 		}
+
+		region = "ap-northeast-2"
+		tableName = "seolmyeongtang"
+		pk = "post"
 
 		cfg, err = config.LoadDefaultConfig(
 			context.TODO(),
@@ -71,8 +74,6 @@ func init() {
 }
 
 func getPostsFromDB(ctx context.Context) ([]postWithoutContent, error) {
-	log.Default().Println(tableName)
-
 	res, err := db.Query(ctx, &dynamodb.QueryInput{
 		TableName:              aws.String(tableName),
 		KeyConditionExpression: aws.String("#PK = :PK"),

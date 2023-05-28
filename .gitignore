@@ -21,3 +21,9 @@ go.work
 .vscode
 
 .DS_Store
+
+.env
+*.zip
+main
+
+tmp

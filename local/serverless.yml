@@ -1,0 +1,34 @@
+service: local
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: go1.x
+  region: ap-northeast-2
+  environment:
+    ENV: local
+    AWS_REGION: ap-notheast-2
+    DYNAMODB_TABLE: seolmyeongtang 
+    DYNAMODB_PK: PK
+
+functions:
+  main:
+    handler: main
+    events:
+      - http:
+          path: /post
+          method: get
+      - http:
+          path: /post/{postId}
+          method: get
+
+custom:
+  serverless-offline:
+    useDocker: true
+    noTimeout: true
+    # reloadHandler: true
+    # dockerReadOnly: false
+
+plugins:
+  - serverless-offline
