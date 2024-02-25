@@ -18,11 +18,11 @@ export default class TerminalGateway implements OnGatewayConnection, OnGatewayDi
     private ptys: Map<string, IPty> = new Map();
 
     handleConnection(@ConnectedSocket() socket: Socket) {
-        Logger.log(`[Socket Connect]: ${socket.id}`);
+        Logger.log(`[Terminal Socket Connect]: ${socket.id}`);
     }
 
     handleDisconnect(@ConnectedSocket() socket: Socket) {
-        Logger.log(`[Socket Disconnect]: ${socket.id}`);
+        Logger.log(`[Terminal Socket Disconnect]: ${socket.id}`);
 
         const { id } = socket;
         const pty = this.ptys.get(id);
