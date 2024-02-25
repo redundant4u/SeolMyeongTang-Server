@@ -1,7 +1,8 @@
 import { Module } from "@nestjs/common";
-import { TerminalModule } from "./terminal.module";
+import { TerminalModule } from "./terminal/terminal.module";
+import { CrdtModule } from "./crdt/crdt.module";
 
 @Module({
-    imports: [TerminalModule],
+    imports: [TerminalModule, CrdtModule],
 })
 export class AppModule {}
