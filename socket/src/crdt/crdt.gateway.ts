@@ -22,7 +22,7 @@ export default class CrdtGateway implements OnGatewayConnection, OnGatewayDiscon
     private states: CrdtState = ["", ["", 0, [0, 0, 0]]];
 
     handleConnection(@ConnectedSocket() socket: Socket) {
-        if (this.count > 20) {
+        if (this.count > 50) {
             Logger.error("[CRDT Socket Connect]: Too many connections");
             socket.disconnect();
             return;
