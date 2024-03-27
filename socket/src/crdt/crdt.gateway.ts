@@ -9,8 +9,10 @@ import {
 } from "@nestjs/websockets";
 import { Socket } from "socket.io";
 
-type RGB = [number, number, number];
-type CrdtState = [string, [peer: string, timestamp: number, value: RGB]];
+type CrdtState = {
+    colors: string[];
+    data: [timestamp: number, colorIndex: number] | [];
+};
 
 @WebSocketGateway({
     namespace: "crdt",
@@ -19,7 +21,10 @@ type CrdtState = [string, [peer: string, timestamp: number, value: RGB]];
 })
 export default class CrdtGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private count: number = 0;
-    private states: CrdtState = ["", ["", 0, [0, 0, 0]]];
+    private states: CrdtState = {
+        colors: [],
+        data: [],
+    };
 
     handleConnection(@ConnectedSocket() socket: Socket) {
         if (this.count > 50) {
@@ -47,7 +52,10 @@ export default class CrdtGateway implements OnGatewayConnection, OnGatewayDiscon
 
     @SubscribeMessage("clear")
     clear(@ConnectedSocket() socket: Socket) {
-        this.states = ["", ["", 0, [0, 0, 0]]];
+        this.states = {
+            colors: [],
+            data: [],
+        };
 
         socket.emit("clear");
         socket.broadcast.emit("clear");
