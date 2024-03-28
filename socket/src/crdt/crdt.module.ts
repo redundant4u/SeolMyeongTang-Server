@@ -1,5 +1,6 @@
-import { Module } from "@nestjs/common";
 import CrdtGateway from "./crdt.gateway";
+
+import { Module } from "@nestjs/common";
 
 @Module({
     providers: [CrdtGateway],

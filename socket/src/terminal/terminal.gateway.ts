@@ -1,3 +1,6 @@
+import { IPty, spawn } from "node-pty";
+import { Socket } from "socket.io";
+
 import { Logger } from "@nestjs/common";
 import {
     ConnectedSocket,
@@ -6,8 +9,6 @@ import {
     SubscribeMessage,
     WebSocketGateway,
 } from "@nestjs/websockets";
-import { IPty, spawn } from "node-pty";
-import { Socket } from "socket.io";
 
 @WebSocketGateway({
     namespace: "terminal",

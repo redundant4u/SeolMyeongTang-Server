@@ -1,3 +1,5 @@
+import { Socket } from "socket.io";
+
 import { Logger } from "@nestjs/common";
 import {
     ConnectedSocket,
@@ -7,7 +9,6 @@ import {
     SubscribeMessage,
     WebSocketGateway,
 } from "@nestjs/websockets";
-import { Socket } from "socket.io";
 
 type CrdtState = {
     colors: string[];
