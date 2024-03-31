@@ -12,8 +12,11 @@ import {
 
 type CrdtState = {
     colors: string[];
-    data: [timestamp: number, colorIndex: number] | [];
+    data: Array<[timestamp: number, colorIndex: number]>;
 };
+
+const w = 64,
+    h = 64;
 
 @WebSocketGateway({
     namespace: "crdt",
@@ -28,7 +31,7 @@ export default class CrdtGateway implements OnGatewayConnection, OnGatewayDiscon
     };
 
     handleConnection(@ConnectedSocket() socket: Socket) {
-        if (this.count > 50) {
+        if (this.count > 100) {
             Logger.error("[CRDT Socket Connect]: Too many connections");
             socket.disconnect();
             return;
@@ -46,9 +49,28 @@ export default class CrdtGateway implements OnGatewayConnection, OnGatewayDiscon
     }
 
     @SubscribeMessage("write")
-    write(@ConnectedSocket() socket: Socket, @MessageBody() data: CrdtState) {
-        this.states = data;
-        socket.broadcast.emit("merge", data);
+    write(@ConnectedSocket() socket: Socket, @MessageBody() state: CrdtState) {
+        if (state.data.length > w * h) {
+            Logger.error("[CRDT Socket Write]: Invalid data");
+            return;
+        } else if (state.data.length > 0) {
+            for (const [timestamp, colorIndex] of state.data) {
+                if (timestamp > Number.MAX_SAFE_INTEGER || colorIndex > Number.MAX_SAFE_INTEGER) {
+                    Logger.error("[CRDT Socket Write]: Invalid data");
+                    return;
+                }
+            }
+        }
+
+        this.states.colors.map((color) => {
+            if (color.length !== 6) {
+                Logger.error("[CRDT Socket Write]: Invalid state.colors");
+                return;
+            }
+        });
+
+        this.states = state;
+        socket.broadcast.emit("merge", state);
     }
 
     @SubscribeMessage("clear")
