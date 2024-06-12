@@ -29,6 +29,7 @@ type post struct {
 type postWithoutContent struct {
 	Title     string
 	SK        string
+	Tags      []string
 	CreatedAt string
 }
 
