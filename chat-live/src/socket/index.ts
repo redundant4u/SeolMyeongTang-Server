@@ -1,7 +1,7 @@
 import { Server, Socket } from "socket.io";
 import chatHandlers from "./chat";
 import { createAdapter } from "@socket.io/redis-adapter";
-import { pubClient, subClient } from "../redis";
+import { pubClient, subClient } from "../utils/redis";
 
 export const createSocket = () => {
     return new Server({
@@ -15,5 +15,5 @@ export const createSocket = () => {
 export const onConnection = (io: Socket) => {
     const chat = chatHandlers(io);
 
-    io.on("chat:create", chat.createChat);
+    io.on("create", chat.createChat);
 };
