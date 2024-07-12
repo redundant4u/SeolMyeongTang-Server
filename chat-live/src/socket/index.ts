@@ -1,16 +1,18 @@
-import * as http from "http";
-import * as socketio from "socket.io";
+import { Server, Socket } from "socket.io";
 import chatHandlers from "./chat";
+import { createAdapter } from "@socket.io/redis-adapter";
+import { pubClient, subClient } from "../redis";
 
-export const createSocket = (server: http.Server) => {
-    return new socketio.Server(server, {
+export const createSocket = () => {
+    return new Server({
         cors: {},
         transports: ["websocket"],
         httpCompression: true,
+        adapter: createAdapter(pubClient, subClient),
     });
 };
 
-export const onConnection = (io: socketio.Socket) => {
+export const onConnection = (io: Socket) => {
     const chat = chatHandlers(io);
 
     io.on("chat:create", chat.createChat);

@@ -1,11 +1,14 @@
-import express from "express";
 import { createServer } from "http";
 import { createSocket, onConnection } from "./socket";
+import { redisConnect } from "./redis";
 
-const app = express();
-const server = createServer(app);
+const boot = async () => {
+    await redisConnect();
 
-const io = createSocket(server);
-io.of("/chat").on("connection", onConnection);
+    const io = createSocket();
+    io.listen(8080).of("/chat").on("connection", onConnection);
+};
 
-server.listen(8080, () => {});
+boot().catch((err) => {
+    console.log(err);
+});
