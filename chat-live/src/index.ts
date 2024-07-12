@@ -1,12 +1,11 @@
 import express from "express";
 import { createServer } from "http";
-import { Server } from "socket.io";
+import { createSocket, onConnection } from "./socket";
 
 const app = express();
 const server = createServer(app);
 
-const io = new Server(server);
-
-io.on("connection", () => {});
+const io = createSocket(server);
+io.of("/chat").on("connection", onConnection);
 
 server.listen(8080, () => {});

@@ -1,5 +1,5 @@
 {
-    "name": "seolmyeongtang-server-chat",
+    "name": "seolmyeongtang-server-chat-live",
     "version": "0.0.1",
     "main": "src/index.js",
     "scripts": {
