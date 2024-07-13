@@ -1,0 +1,15 @@
+services:
+  db:
+    container_name: pg-chat
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_DB=wjstjf
+      - POSTGRES_USER=wjstjf
+      - POSTGRES_PASSWORD=wjstjf
+    ports:
+      - 5432:5432
+  redis:
+    container_name: redis-chat
+    image: redis:7-alpine
+    ports:
+      - 6379:6379
