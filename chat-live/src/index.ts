@@ -1,8 +1,9 @@
-import { createServer } from "http";
 import { createSocket, onConnection } from "./socket";
-import { redisConnect } from "./redis";
+import { redisConnect } from "./utils/redis";
+import { pgConnect } from "./utils/db";
 
 const boot = async () => {
+    await pgConnect();
     await redisConnect();
 
     const io = createSocket();
@@ -10,5 +11,6 @@ const boot = async () => {
 };
 
 boot().catch((err) => {
-    console.log(err);
+    console.error("[ERROR] boot failed");
+    process.exit(1);
 });
