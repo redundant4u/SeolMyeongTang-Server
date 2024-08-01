@@ -1,0 +1,34 @@
+name: Call Jenkins
+
+on:
+  workflow_call:
+    inputs:
+      DOMAIN:
+        required: true
+        type: string
+    secrets:
+      JENKINS_USER:
+        required: true
+      JENKINS_API_TOKEN:
+        required: true
+      JENKINS_URL:
+        required: true
+      JENKINS_TOKEN:
+        required: true
+      IMAGE_VERSION:
+        required: true
+
+jobs:
+  call_jenkins:
+    name: call_jenkins
+    runs-on: ubuntu-22.04
+    timeout-minutes: 5
+    steps:
+      - name: curl
+        run: |
+          curl --fail \
+            -u ${{ secrets.JENKINS_USER }}:${{ secrets.JENKINS_API_TOKEN }} \
+            -X POST "${{ secrets.JENKINS_URL }}/${{ inputs.DOMAIN }}/buildWithParameters" \
+            --data-urlencode "token=${{ secrets.JENKINS_TOKEN }}" \
+            --data-urlencode "IMAGE_VERSION=${{ secrets.IMAGE_VERSION }}" \
+            2>/dev/null
