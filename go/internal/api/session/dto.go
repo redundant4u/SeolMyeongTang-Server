@@ -6,8 +6,7 @@ type getPodsResponse struct {
 }
 
 type createPodRequest struct {
-	Name      string
-	SessionId string
+	Name string
 }
 
 type createPodResponse struct {
@@ -17,4 +16,8 @@ type createPodResponse struct {
 
 type deletePodRequest struct {
 	SessionId string `json:"sessionId"`
+}
+
+type createClientIdResponse struct {
+	ClientId string `json:"clientId"`
 }

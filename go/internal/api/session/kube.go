@@ -5,11 +5,11 @@ import (
 	"crypto/rand"
 	"fmt"
 	"seolmyeong-tang-server/internal/pkg/k8s"
-	"seolmyeong-tang-server/internal/pkg/logger"
 
 	corev1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 )
 
 type kube struct {
@@ -17,15 +17,31 @@ type kube struct {
 	namespace string
 }
 
+type createPod struct {
+	name      string
+	clientId  string
+	sessionId string
+}
+
+type deletePod struct {
+	clientId  string
+	sessionId string
+}
+
 func newKube(k8s *k8s.Client, namespace string) *kube {
 	return &kube{k8s: k8s, namespace: namespace}
 }
 
-func (k *kube) getSessions(ctx context.Context) ([]corev1.Pod, error) {
+func (k *kube) getPods(ctx context.Context, clientId string) ([]corev1.Pod, error) {
+	selector := labels.Set{
+		"app":       "vnc",
+		"client-id": clientId,
+	}.AsSelector().String()
+
 	pods, err := k.k8s.Clientset.CoreV1().
 		Pods("vnc").
 		List(ctx, metav1.ListOptions{
-			LabelSelector: "app=vnc",
+			LabelSelector: selector,
 		})
 	if err != nil {
 		return nil, err
@@ -45,21 +61,26 @@ func (k *kube) getSessions(ctx context.Context) ([]corev1.Pod, error) {
 	return running, err
 }
 
-func (k *kube) createSession(ctx context.Context, info createPodRequest) (*corev1.Pod, error) {
+func (k *kube) getSessions(ctx context.Context, clientId string) ([]corev1.Pod, error) {
+	return k.getPods(ctx, clientId)
+}
+
+func (k *kube) createSession(ctx context.Context, info createPod) (*corev1.Pod, error) {
 	podSpec := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: "vnc",
-			Name:      info.Name + "-" + info.SessionId,
+			Name:      info.sessionId,
 			Labels: map[string]string{
-				"app":        "vnc",
-				"session-id": info.SessionId,
+				"app":       "vnc",
+				"name":      info.name,
+				"client-id": info.clientId,
 			},
 		},
 		Spec: corev1.PodSpec{
 			RestartPolicy: corev1.RestartPolicyNever,
 			Containers: []corev1.Container{
 				{
-					Name:            "vnc-server",
+					Name:            info.sessionId,
 					Image:           "vnc",
 					ImagePullPolicy: "Never",
 					Ports: []corev1.ContainerPort{
@@ -73,7 +94,6 @@ func (k *kube) createSession(ctx context.Context, info createPodRequest) (*corev
 		},
 	}
 
-	logger.Info(k.namespace)
 	pod, err := k.k8s.Clientset.CoreV1().
 		Pods(k.namespace).
 		Create(ctx, podSpec, metav1.CreateOptions{})
@@ -95,27 +115,36 @@ func (k *kube) createSession(ctx context.Context, info createPodRequest) (*corev
 	return pod, nil
 }
 
-func (k *kube) deleteSession(ctx context.Context, info deletePodRequest) error {
-	podName := fmt.Sprintf("vnc-%s", info.SessionId)
-
-	err := k.k8s.Clientset.CoreV1().
-		Pods(k.namespace).
-		Delete(ctx, podName, metav1.DeleteOptions{})
-
+func (k *kube) deleteSession(ctx context.Context, info deletePod) error {
+	pods, err := k.getPods(ctx, info.clientId)
 	if err != nil {
+		return err
+	}
+
+	var target *corev1.Pod
+	for i := range pods {
+		if pods[i].Name == info.sessionId {
+			target = &pods[i]
+			break
+		}
+	}
+
+	if target == nil {
+		return nil
+	}
+
+	if err := k.k8s.Clientset.CoreV1().
+		Pods(k.namespace).
+		Delete(ctx, info.sessionId, metav1.DeleteOptions{}); err != nil {
+
 		if statusErr, ok := err.(kerrors.APIStatus); ok {
 			st := statusErr.Status()
-
-			return fmt.Errorf(
-				"code=%d reason=%s message=%s",
-				st.Code,
-				st.Reason,
-				st.Message,
-			)
+			return fmt.Errorf("code=%d reason=%s message=%s", st.Code, st.Reason, st.Message)
 		}
 
 		return err
 	}
+
 	return nil
 }
 

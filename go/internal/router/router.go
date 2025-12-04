@@ -11,7 +11,7 @@ import (
 func New() (*echo.Echo, error) {
 	e := echo.New()
 
-	e.Use(middleware.Logger())
+	// e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
@@ -25,6 +25,7 @@ func New() (*echo.Echo, error) {
 		AllowHeaders: []string{
 			echo.HeaderContentType,
 			echo.HeaderAuthorization,
+			"X-Client-Id",
 		},
 	}))
 
