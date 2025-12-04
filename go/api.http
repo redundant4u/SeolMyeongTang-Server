@@ -1,0 +1,21 @@
+@local=http://localhost:8090
+@json=Content-Type: application/json; charset=UTF-8
+
+###
+GET {{local}}/session
+
+###
+POST {{local}}/session
+{{json}}
+
+{
+    "name": "test"
+}
+
+###
+DELETE {{local}}/session
+{{json}}
+
+{
+    "sessionId": "x0f03lra"
+}

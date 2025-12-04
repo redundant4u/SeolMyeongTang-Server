@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: vnc-sa
+  namespace: vnc
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: vnc-role
+  namespace: vnc
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["list"]
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: vnc-rolebinding
+  namespace: vnc
+subjects:
+- kind: ServiceAccount
+  name: vnc-sa
+  namespace: vnc
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: vnc-role

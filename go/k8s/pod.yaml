@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  namespace: vnc
+  name: proxy-pod
+  labels:
+    app: proxy
+spec:
+  containers:
+    - name: proxy
+      image: proxy
+      imagePullPolicy: Never
+      ports:
+        - containerPort: 8080
+  serviceAccountName: vnc-sa
+  automountServiceAccountToken: true
