@@ -5,14 +5,12 @@ from typing import Optional
 from kubernetes import config
 from kubernetes.client import CoreV1Api
 
-# ── 환경변수(필요에 따라 조정) ──────────────────────────────────────────────
-NAMESPACE = os.getenv("K8S_NAMESPACE", "vnc")
-LABEL_APP_KEY = os.getenv("LABEL_APP_KEY", "app")
-LABEL_APP_VAL = os.getenv("LABEL_APP_VAL", "vnc")
-LABEL_SESS_KEY = os.getenv("LABEL_SESSION_KEY", "session-id")
-TARGET_PORT = os.getenv("TARGET_PORT", "5901")
+NAMESPACE = os.getenv("K8S_NAMESPACE")
+LABEL_APP_KEY = os.getenv("LABEL_APP_KEY")
+LABEL_APP_VAL = os.getenv("LABEL_APP_VAL")
+LABEL_CLIENT_ID = os.getenv("LABEL_CLIENT_ID")
+TARGET_PORT = os.getenv("TARGET_PORT")
 CACHE_TTL = int(os.getenv("CACHE_TTL", "10"))
-# ────────────────────────────────────────────────────────────────────────────
 
 
 def _load_kube():
@@ -38,14 +36,10 @@ def _is_pod_ready(pod) -> bool:
     return False
 
 
-def _select_pod(pods) -> Optional[str]:
-    for p in pods:
-        if _is_pod_ready(p):
-            return p.status.pod_ip
+def _select_pod(pod) -> Optional[str]:
+    if _is_pod_ready(pod):
+        return pod.status.pod_ip
 
-    for p in pods:
-        if p.status.phase == "Running" and p.status.pod_ip:
-            return p.status.pod_ip
     return None
 
 
@@ -55,7 +49,10 @@ def _find_target_hostport(token: str) -> Optional[str]:
     if ent and ent[0] > now:
         return ent[1]
 
-    selector = f"{LABEL_APP_KEY}={LABEL_APP_VAL},{LABEL_SESS_KEY}={token}"
+    ids = token.split(":", 1)
+    client_id, session_id = ids[0], ids[1]
+
+    selector = f"{LABEL_APP_KEY}={LABEL_APP_VAL},{LABEL_CLIENT_ID}={client_id}"
 
     try:
         pods = _core.list_namespaced_pod(
@@ -63,11 +60,12 @@ def _find_target_hostport(token: str) -> Optional[str]:
             label_selector=selector,
             _request_timeout=3,
         ).items
+        filtered_pod = next((p for p in pods if p.metadata.name == session_id), None)
     except Exception as e:
         print(e)
         return None
 
-    ip = _select_pod(pods)
+    ip = _select_pod(filtered_pod)
     if not ip:
         return None
 
