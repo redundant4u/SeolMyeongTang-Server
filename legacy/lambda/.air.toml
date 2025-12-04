@@ -7,7 +7,7 @@ tmp_dir = "tmp"
   bin = "./tmp/main"
   cmd = "GOOS=linux CGO_ENABLED=0 go build -o local/main ."
   delay = 0
-  exclude_dir = ["assets", "tmp", "vendor", "testdata"]
+  exclude_dir = ["assets", "tmp", "vendor", "testdata", "local"]
   exclude_file = []
   exclude_regex = ["_test.go"]
   exclude_unchanged = false

@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 )
 
-var env = os.Getenv("ENV")
+var env = "local"
 var region = os.Getenv("AWS_REGION")
 var tableName = os.Getenv("DYNAMODB_TABLE")
 var pk = os.Getenv("DYNAMODB_PK")

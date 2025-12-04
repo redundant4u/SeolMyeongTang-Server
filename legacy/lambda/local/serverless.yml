@@ -1,6 +1,6 @@
 service: local
 
-frameworkVersion: '3'
+frameworkVersion: '4.1.5'
 
 provider:
   name: aws
