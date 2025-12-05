@@ -7,7 +7,11 @@ func Info(format string, args ...any) {
 }
 
 func Error(format string, err error) {
-	log.Printf("[ERR] "+format+": %v", err)
+	if err != nil {
+		log.Printf("[ERR] "+format+": %v", err)
+	} else {
+		log.Printf("[ERR] " + format)
+	}
 }
 
 func Warn(format string) {

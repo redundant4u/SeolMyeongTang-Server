@@ -21,20 +21,17 @@ func NewClient(kubeconfig string) (*Client, error) {
 		config, err = clientcmd.BuildConfigFromFlags("", kubeconfig)
 		if err != nil {
 			return nil, fmt.Errorf("build kubeconfig from %s: %w", kubeconfig, err)
-			// panic("Faile to build kubeconfig")
 		}
 	} else {
 		config, err = rest.InClusterConfig()
 		if err != nil {
 			return nil, fmt.Errorf("create in-cluster config: %w", err)
-			// panic("Failed to create in-cluster config")
 		}
 	}
 
 	clientSet, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		return nil, fmt.Errorf("create kubernetes clientset: %w", err)
-		// panic("Failed to create clientset")
 	}
 
 	logger.Info("Kubernetes client initialized")
