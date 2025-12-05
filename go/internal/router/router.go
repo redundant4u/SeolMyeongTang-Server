@@ -1,14 +1,16 @@
 package router
 
 import (
+	"seolmyeong-tang-server/internal/api/post"
 	"seolmyeong-tang-server/internal/api/session"
 	"seolmyeong-tang-server/internal/pkg/logger"
 
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
 
-func New() (*echo.Echo, error) {
+func New(ddb *dynamodb.Client) *echo.Echo {
 	e := echo.New()
 
 	// e.Use(middleware.Logger())
@@ -29,11 +31,10 @@ func New() (*echo.Echo, error) {
 		},
 	}))
 
-	if err := session.Init(e); err != nil {
-		return nil, err
-	}
+	session.Init(e)
+	post.Init(e, ddb)
 
 	logger.Info("Router init")
 
-	return e, nil
+	return e
 }

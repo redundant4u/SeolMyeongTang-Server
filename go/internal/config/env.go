@@ -14,6 +14,12 @@ type env struct {
 	KUBE_CONFIG            string `mapstructure:"KUBE_CONFIG" required:"true"`
 	KUBE_SESSION_NAMESPACE string `mapstructure:"KUBE_SESSION_NAMESPACE" required:"true"`
 
+	AWS_ACCESS_KEY string `mapstructure:"AWS_ACCESS_KEY"`
+	AWS_SECRET_KEY string `mapstructure:"AWS_SECRET_KEY"`
+	AWS_REGION     string `mapstructure:"AWS_REGION"`
+
+	DYNAMODB_TABLE string `mapstructure:"DYNAMODB_TABLE"`
+
 	// DB_HOST     string `mapstructure:"DB_HOST"`
 	// DB_USER     string `mapstructure:"DB_USER"`
 	// DB_NAME     string `mapstructure:"DB_NAME"`
