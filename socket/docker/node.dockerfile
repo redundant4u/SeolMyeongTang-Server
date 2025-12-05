@@ -1,4 +1,4 @@
-FROM node:16-alpine
+FROM node:24-alpine
 
 WORKDIR /home/node
 
@@ -8,7 +8,7 @@ ENV NODE_ENV=production \
 RUN apk add --no-cache tzdata build-base python3 openssh-client && \
     cp /usr/share/zoneinfo/$TZ /etc/localtime && \
     echo $TZ > /etc/timezone && \
-    npm i -g pnpm pm2
+    npm i -g pnpm@9 pm2
 
 COPY . .
 
