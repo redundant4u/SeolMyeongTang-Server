@@ -28,18 +28,10 @@ func (h *handler) getSessions(c echo.Context) error {
 		return response.BadRequest(c)
 	}
 
-	res := make([]getPodsResponse, 0, len(pods))
-	for _, p := range pods {
-		name, ok := p.Labels["name"]
-		if !ok {
-			logger.Error("pod label name is something wrong", err)
-			return response.BadRequest(c)
-		}
-
-		res = append(res, getPodsResponse{
-			Name:      name,
-			SessionId: p.Name,
-		})
+	res, err := toGetSessionsResponse(pods)
+	if err != nil {
+		logger.Error("failed to map getSessions response", err)
+		return response.BadRequest(c)
 	}
 
 	return response.OK(c, res)
@@ -92,15 +84,10 @@ func (h *handler) createSession(c echo.Context) error {
 
 	logger.Info("pod is created: %s", sessionId)
 
-	name, ok := pod.Labels["name"]
-	if !ok {
-		logger.Error("pod session-id is something wrong", err)
+	res, err := toCreateSessionResponse(pod, sessionId)
+	if err != nil {
+		logger.Error("failed to convert createSession response", err)
 		return response.BadRequest(c)
-	}
-
-	res := createPodResponse{
-		Name:      name,
-		SessionId: sessionId,
 	}
 
 	return response.Created(c, res)
