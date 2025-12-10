@@ -8,6 +8,7 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 )
@@ -78,6 +79,19 @@ func (k *kube) createSession(ctx context.Context, info createPod) (*corev1.Pod, 
 		},
 		Spec: corev1.PodSpec{
 			RestartPolicy: corev1.RestartPolicyNever,
+			Volumes: []corev1.Volume{
+				{
+					Name: "workspace",
+					VolumeSource: corev1.VolumeSource{
+						EmptyDir: &corev1.EmptyDirVolumeSource{
+							SizeLimit: func() *resource.Quantity {
+								q := resource.MustParse("5Gi")
+								return &q
+							}(),
+						},
+					},
+				},
+			},
 			Containers: []corev1.Container{
 				{
 					Name:            info.sessionId,
@@ -87,6 +101,24 @@ func (k *kube) createSession(ctx context.Context, info createPod) (*corev1.Pod, 
 						{
 							Name:          "vnc",
 							ContainerPort: 5901,
+						},
+					},
+					VolumeMounts: []corev1.VolumeMount{
+						{
+							Name:      "workspace",
+							MountPath: "/home/app",
+						},
+					},
+					Resources: corev1.ResourceRequirements{
+						Requests: corev1.ResourceList{
+							corev1.ResourceCPU:              resource.MustParse("500m"),
+							corev1.ResourceMemory:           resource.MustParse("512Mi"),
+							corev1.ResourceEphemeralStorage: resource.MustParse("3Gi"),
+						},
+						Limits: corev1.ResourceList{
+							corev1.ResourceCPU:              resource.MustParse("1"),
+							corev1.ResourceMemory:           resource.MustParse("1Gi"),
+							corev1.ResourceEphemeralStorage: resource.MustParse("5Gi"),
 						},
 					},
 				},
