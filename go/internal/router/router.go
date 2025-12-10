@@ -4,6 +4,7 @@ import (
 	"seolmyeong-tang-server/internal/api/post"
 	"seolmyeong-tang-server/internal/api/session"
 	"seolmyeong-tang-server/internal/pkg/logger"
+	"seolmyeong-tang-server/internal/pkg/validator"
 
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/labstack/echo/v4"
@@ -12,6 +13,9 @@ import (
 
 func New(ddb *dynamodb.Client) *echo.Echo {
 	e := echo.New()
+
+	v := validator.New()
+	e.Validator = v
 
 	// e.Use(middleware.Logger())
 	e.Use(middleware.Recover())

@@ -12,8 +12,8 @@ type getPodsResponse struct {
 }
 
 type createPodRequest struct {
-	Name     string
-	ClientId string
+	Name  string `json:"name" validate:"required,max=20"`
+	Image string `json:"image" validate:"required,oneof=debian-xfce ubuntu"`
 }
 
 type createPodResponse struct {
@@ -22,7 +22,7 @@ type createPodResponse struct {
 }
 
 type deletePodRequest struct {
-	SessionId string `json:"sessionId"`
+	SessionId string `json:"sessionId" validate:"required"`
 }
 
 type createClientIdResponse struct {

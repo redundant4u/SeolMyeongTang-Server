@@ -50,8 +50,8 @@ func (h *handler) createSession(c echo.Context) error {
 		return response.BadRequest(c)
 	}
 
-	if req.Name == "" {
-		logger.Error("createSession body value is invalid", nil)
+	if err := c.Validate(&req); err != nil {
+		logger.Error("createSession validation failed", err)
 		return response.BadRequest(c)
 	}
 
@@ -72,6 +72,7 @@ func (h *handler) createSession(c echo.Context) error {
 
 	info := createPod{
 		name:      req.Name,
+		image:     req.Image,
 		clientId:  clientId,
 		sessionId: sessionId,
 	}
@@ -105,10 +106,8 @@ func (h *handler) deleteSession(c echo.Context) error {
 		return response.BadRequest(c)
 	}
 
-	ctx := c.Request().Context()
-
-	if req.SessionId == "" {
-		logger.Error("sessionId is required", nil)
+	if err := c.Validate(&req); err != nil {
+		logger.Error("deleteSession validation failed", err)
 		return response.BadRequest(c)
 	}
 
@@ -116,6 +115,8 @@ func (h *handler) deleteSession(c echo.Context) error {
 		clientId:  clientId,
 		sessionId: req.SessionId,
 	}
+
+	ctx := c.Request().Context()
 
 	err := h.kube.deleteSession(ctx, info)
 	if err != nil {

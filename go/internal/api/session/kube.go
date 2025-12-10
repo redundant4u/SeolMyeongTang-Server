@@ -20,6 +20,7 @@ type kube struct {
 
 type createPod struct {
 	name      string
+	image     string
 	clientId  string
 	sessionId string
 }
@@ -95,7 +96,7 @@ func (k *kube) createSession(ctx context.Context, info createPod) (*corev1.Pod, 
 			Containers: []corev1.Container{
 				{
 					Name:            info.sessionId,
-					Image:           "vnc",
+					Image:           "vnc:" + info.image,
 					ImagePullPolicy: "Never",
 					Ports: []corev1.ContainerPort{
 						{
