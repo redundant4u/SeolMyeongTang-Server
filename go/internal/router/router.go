@@ -14,8 +14,7 @@ import (
 func New(ddb *dynamodb.Client) *echo.Echo {
 	e := echo.New()
 
-	v := validator.New()
-	e.Validator = v
+	e.Validator = validator.New()
 
 	// e.Use(middleware.Logger())
 	e.Use(middleware.Recover())

@@ -71,10 +71,11 @@ func (h *handler) createSession(c echo.Context) error {
 	sessionId := h.kube.secureRandomString(8)
 
 	info := createPod{
-		name:      req.Name,
-		image:     req.Image,
-		clientId:  clientId,
-		sessionId: sessionId,
+		name:        req.Name,
+		image:       req.Image,
+		clientId:    clientId,
+		sessionId:   sessionId,
+		description: req.Description,
 	}
 
 	pod, err := h.kube.createSession(ctx, info)

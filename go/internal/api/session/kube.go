@@ -19,10 +19,11 @@ type kube struct {
 }
 
 type createPod struct {
-	name      string
-	image     string
-	clientId  string
-	sessionId string
+	name        string
+	image       string
+	clientId    string
+	sessionId   string
+	description string
 }
 
 type deletePod struct {
@@ -76,6 +77,9 @@ func (k *kube) createSession(ctx context.Context, info createPod) (*corev1.Pod, 
 				"app":       "vnc",
 				"name":      info.name,
 				"client-id": info.clientId,
+			},
+			Annotations: map[string]string{
+				"description": info.description,
 			},
 		},
 		Spec: corev1.PodSpec{

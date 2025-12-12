@@ -7,18 +7,23 @@ import (
 )
 
 type getPodsResponse struct {
-	Name      string `json:"name"`
-	SessionId string `json:"sessionId"`
+	Name        string `json:"name"`
+	SessionId   string `json:"sessionId"`
+	Image       string `json:"image"`
+	Description string `json:"description"`
 }
 
 type createPodRequest struct {
-	Name  string `json:"name" validate:"required,max=20"`
-	Image string `json:"image" validate:"required,oneof=debian-xfce ubuntu"`
+	Name        string `json:"name" validate:"required,k8slabel,max=20"`
+	Image       string `json:"image" validate:"required,oneof=debian-xfce ubuntu"`
+	Description string `json:"description" validate:"k8slabel,max=100"`
 }
 
 type createPodResponse struct {
-	Name      string `json:"name"`
-	SessionId string `json:"sessionId"`
+	Name        string `json:"name"`
+	SessionId   string `json:"sessionId"`
+	Image       string `json:"image"`
+	Description string `json:"description"`
 }
 
 type deletePodRequest struct {
@@ -35,12 +40,21 @@ func toGetSessionsResponse(pods []corev1.Pod) ([]getPodsResponse, error) {
 	for _, p := range pods {
 		name, ok := p.Labels["name"]
 		if !ok || name == "" {
-			return nil, fmt.Errorf("pod label name is missing for pod: %s", p.Name)
+			return nil, fmt.Errorf("pod label 'name' is missing")
+		}
+
+		image := p.Spec.Containers[0].Image
+
+		description, ok := p.Annotations["description"]
+		if !ok {
+			description = ""
 		}
 
 		res = append(res, getPodsResponse{
-			Name:      name,
-			SessionId: p.Name,
+			Name:        name,
+			SessionId:   p.Name,
+			Image:       image,
+			Description: description,
 		})
 	}
 
@@ -53,8 +67,17 @@ func toCreateSessionResponse(pod *corev1.Pod, sessionId string) (createPodRespon
 		return createPodResponse{}, fmt.Errorf("pod label 'name' is missing")
 	}
 
+	image := pod.Spec.Containers[0].Image
+
+	description, ok := pod.Annotations["description"]
+	if !ok {
+		description = ""
+	}
+
 	return createPodResponse{
-		Name:      name,
-		SessionId: sessionId,
+		Name:        name,
+		SessionId:   sessionId,
+		Image:       image,
+		Description: description,
 	}, nil
 }
