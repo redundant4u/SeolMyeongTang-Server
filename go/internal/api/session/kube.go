@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"fmt"
 	"seolmyeong-tang-server/internal/pkg/k8s"
+	"time"
 
 	corev1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
@@ -13,9 +14,10 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 )
 
-type kube struct {
+type Kube struct {
 	k8s       *k8s.Client
 	namespace string
+	Gc        *gc
 }
 
 type createPod struct {
@@ -31,11 +33,21 @@ type deletePod struct {
 	sessionId string
 }
 
-func newKube(k8s *k8s.Client, namespace string) *kube {
-	return &kube{k8s: k8s, namespace: namespace}
+func NewKube(k8s *k8s.Client, namespace string) *Kube {
+	gc := newGC(
+		k8s,
+		namespace,
+		1,
+	)
+
+	return &Kube{
+		k8s:       k8s,
+		namespace: namespace,
+		Gc:        gc,
+	}
 }
 
-func (k *kube) getPods(ctx context.Context, clientId string) ([]corev1.Pod, error) {
+func (k *Kube) getPods(ctx context.Context, clientId string) ([]corev1.Pod, error) {
 	selector := labels.Set{
 		"app":       "vnc",
 		"client-id": clientId,
@@ -64,11 +76,18 @@ func (k *kube) getPods(ctx context.Context, clientId string) ([]corev1.Pod, erro
 	return running, err
 }
 
-func (k *kube) getSessions(ctx context.Context, clientId string) ([]corev1.Pod, error) {
+func (k *Kube) getSessions(ctx context.Context, clientId string) ([]corev1.Pod, error) {
 	return k.getPods(ctx, clientId)
 }
 
-func (k *kube) createSession(ctx context.Context, info createPod) (*corev1.Pod, error) {
+func (k *Kube) createSession(ctx context.Context, info createPod) (*corev1.Pod, error) {
+	proxyURL := "http://vnc-gateway.vnc-proxy.svc.cluster.local:3128"
+	noProxyList := "localhost,127.0.0.1,.svc,.cluster.local,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
+
+	createdAt := time.Now().UTC()
+	// expiredAt := createdAt.Add(10 * time.Minute)
+	expiredAt := createdAt.Add(10 * time.Second)
+
 	podSpec := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: "vnc",
@@ -80,6 +99,8 @@ func (k *kube) createSession(ctx context.Context, info createPod) (*corev1.Pod, 
 			},
 			Annotations: map[string]string{
 				"description": info.description,
+				"created-at":  createdAt.Format(time.RFC3339),
+				"expired-at":  expiredAt.Format(time.RFC3339),
 			},
 		},
 		Spec: corev1.PodSpec{
@@ -102,6 +123,14 @@ func (k *kube) createSession(ctx context.Context, info createPod) (*corev1.Pod, 
 					Name:            info.sessionId,
 					Image:           "vnc:" + info.image,
 					ImagePullPolicy: "Never",
+					Env: []corev1.EnvVar{
+						{Name: "HTTP_PROXY", Value: proxyURL},
+						{Name: "http_proxy", Value: proxyURL},
+						{Name: "HTTPS_PROXY", Value: proxyURL},
+						{Name: "https_proxy", Value: proxyURL},
+						{Name: "NO_PROXY", Value: noProxyList},
+						{Name: "no_proxy", Value: noProxyList},
+					},
 					Ports: []corev1.ContainerPort{
 						{
 							Name:          "vnc",
@@ -117,12 +146,12 @@ func (k *kube) createSession(ctx context.Context, info createPod) (*corev1.Pod, 
 					Resources: corev1.ResourceRequirements{
 						Requests: corev1.ResourceList{
 							corev1.ResourceCPU:              resource.MustParse("500m"),
-							corev1.ResourceMemory:           resource.MustParse("512Mi"),
+							corev1.ResourceMemory:           resource.MustParse("1Gi"),
 							corev1.ResourceEphemeralStorage: resource.MustParse("3Gi"),
 						},
 						Limits: corev1.ResourceList{
 							corev1.ResourceCPU:              resource.MustParse("1"),
-							corev1.ResourceMemory:           resource.MustParse("1Gi"),
+							corev1.ResourceMemory:           resource.MustParse("2Gi"),
 							corev1.ResourceEphemeralStorage: resource.MustParse("5Gi"),
 						},
 					},
@@ -152,7 +181,7 @@ func (k *kube) createSession(ctx context.Context, info createPod) (*corev1.Pod, 
 	return pod, nil
 }
 
-func (k *kube) deleteSession(ctx context.Context, info deletePod) error {
+func (k *Kube) deleteSession(ctx context.Context, info deletePod) error {
 	pods, err := k.getPods(ctx, info.clientId)
 	if err != nil {
 		return err
@@ -185,7 +214,7 @@ func (k *kube) deleteSession(ctx context.Context, info deletePod) error {
 	return nil
 }
 
-func (k *kube) secureRandomString(n int) string {
+func (k *Kube) secureRandomString(n int) string {
 	const letters = "abcdefghijklmnopqrstuvwxyz0123456789"
 
 	b := make([]byte, n)

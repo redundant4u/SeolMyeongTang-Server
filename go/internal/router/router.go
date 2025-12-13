@@ -11,7 +11,7 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 )
 
-func New(ddb *dynamodb.Client) *echo.Echo {
+func New(ddb *dynamodb.Client, kube *session.Kube) *echo.Echo {
 	e := echo.New()
 
 	e.Validator = validator.New()
@@ -34,7 +34,7 @@ func New(ddb *dynamodb.Client) *echo.Echo {
 		},
 	}))
 
-	session.Init(e)
+	session.Init(e, kube)
 	post.Init(e, ddb)
 
 	logger.Info("Router init")

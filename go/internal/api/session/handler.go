@@ -8,10 +8,10 @@ import (
 )
 
 type handler struct {
-	kube *kube
+	kube *Kube
 }
 
-func NewHandler(kube *kube) *handler {
+func NewHandler(kube *Kube) *handler {
 	return &handler{kube: kube}
 }
 
