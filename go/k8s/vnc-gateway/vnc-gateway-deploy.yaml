@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: vnc-gateway
+  name: vnc-gateway
+spec:
+  selector:
+    matchLabels:
+      app: vnc-gateway
+  template:
+    metadata:
+      labels:
+        app: vnc-gateway
+    spec:
+      containers:
+        - name: gluetun
+          image: qmcgaw/gluetun:v3.40
+          securityContext:
+            capabilities:
+              add: ["NET_ADMIN"]
+          envFrom:
+            - configMapRef:
+                name: vnc-gateway-gluetun-config-map
+          env:
+            - name: WIREGUARD_PRIVATE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: vnc-gateway-cf-warp-secret
+                  key: WIREGUARD_PRIVATE_KEY
+            - name: WIREGUARD_ADDRESSES
+              valueFrom:
+                secretKeyRef:
+                  name: vnc-gateway-cf-warp-secret
+                  key: WIREGUARD_ADDRESSES
+        - name: squid
+          image: vnc-proxy:squid
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 3128
+          volumeMounts:
+            - name: vnc-gateway-squid-config-map
+              mountPath: /etc/squid/squid.conf
+              subPath: squid.conf
+      volumes:
+        - name: vnc-gateway-squid-config-map
+          configMap:
+            name: vnc-gateway-squid-config-map

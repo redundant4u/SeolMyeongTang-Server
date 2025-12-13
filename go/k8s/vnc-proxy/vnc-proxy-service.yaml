@@ -1,11 +1,11 @@
 apiVersion: v1
 kind: Service
 metadata:
-  namespace: vnc
-  name: proxy-svc
+  namespace: vnc-proxy
+  name: vnc-proxy
 spec:
   selector:
-    app: proxy
+    app: vnc-proxy
   ports:
     - port: 8080
       targetPort: 8080
