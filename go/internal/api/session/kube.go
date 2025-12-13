@@ -37,7 +37,7 @@ func NewKube(k8s *k8s.Client, namespace string) *Kube {
 	gc := newGC(
 		k8s,
 		namespace,
-		1,
+		60,
 	)
 
 	return &Kube{
@@ -81,12 +81,11 @@ func (k *Kube) getSessions(ctx context.Context, clientId string) ([]corev1.Pod, 
 }
 
 func (k *Kube) createSession(ctx context.Context, info createPod) (*corev1.Pod, error) {
-	proxyURL := "http://vnc-gateway.vnc-proxy.svc.cluster.local:3128"
+	proxyURL := "http://vnc-gateway.vnc-gateway.svc.cluster.local:3128"
 	noProxyList := "localhost,127.0.0.1,.svc,.cluster.local,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
 
 	createdAt := time.Now().UTC()
-	// expiredAt := createdAt.Add(10 * time.Minute)
-	expiredAt := createdAt.Add(10 * time.Second)
+	expiredAt := createdAt.Add(10 * time.Minute)
 
 	podSpec := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
