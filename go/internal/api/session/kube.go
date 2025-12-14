@@ -54,7 +54,7 @@ func (k *Kube) getPods(ctx context.Context, clientId string) ([]corev1.Pod, erro
 	}.AsSelector().String()
 
 	pods, err := k.k8s.Clientset.CoreV1().
-		Pods("vnc").
+		Pods(k.namespace).
 		List(ctx, metav1.ListOptions{
 			LabelSelector: selector,
 		})
@@ -81,7 +81,7 @@ func (k *Kube) getSessions(ctx context.Context, clientId string) ([]corev1.Pod, 
 }
 
 func (k *Kube) createSession(ctx context.Context, info createPod) (*corev1.Pod, error) {
-	proxyURL := "http://vnc-gateway.vnc-gateway.svc.cluster.local:3128"
+	proxyURL := `http://vnc-gateway.` + k.namespace + `.svc.cluster.local:3128`
 	noProxyList := "localhost,127.0.0.1,.svc,.cluster.local,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
 
 	createdAt := time.Now().UTC()
@@ -89,7 +89,7 @@ func (k *Kube) createSession(ctx context.Context, info createPod) (*corev1.Pod, 
 
 	podSpec := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace: "vnc",
+			Namespace: k.namespace,
 			Name:      info.sessionId,
 			Labels: map[string]string{
 				"app":       "vnc",
