@@ -103,6 +103,10 @@ func (k *Kube) createSession(ctx context.Context, info createPod) (*corev1.Pod, 
 			},
 		},
 		Spec: corev1.PodSpec{
+			AutomountServiceAccountToken: func() *bool {
+				b := false
+				return &b
+			}(),
 			RestartPolicy: corev1.RestartPolicyNever,
 			Volumes: []corev1.Volume{
 				{
