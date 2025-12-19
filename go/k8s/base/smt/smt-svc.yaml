@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: smt
+spec:
+  selector:
+    app: smt
+  ports:
+    - port: 8090
+      targetPort: 8090
+      protocol: TCP
+  type: ClusterIP

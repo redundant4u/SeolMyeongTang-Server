@@ -11,7 +11,7 @@ import (
 type env struct {
 	APP_ENV string `mapstructure:"APP_ENV"`
 
-	KUBE_CONFIG            string `mapstructure:"KUBE_CONFIG" required:"true"`
+	KUBE_CONFIG            string `mapstructure:"KUBE_CONFIG"`
 	KUBE_SESSION_NAMESPACE string `mapstructure:"KUBE_SESSION_NAMESPACE" required:"true"`
 
 	AWS_ACCESS_KEY string `mapstructure:"AWS_ACCESS_KEY"`

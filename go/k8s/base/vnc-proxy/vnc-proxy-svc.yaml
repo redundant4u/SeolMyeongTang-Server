@@ -1,7 +1,6 @@
 apiVersion: v1
 kind: Service
 metadata:
-  namespace: vnc-proxy
   name: vnc-proxy
 spec:
   selector:
@@ -9,6 +8,5 @@ spec:
   ports:
     - port: 8080
       targetPort: 8080
-      nodePort: 32000
       protocol: TCP
-  type: NodePort
+  type: ClusterIP

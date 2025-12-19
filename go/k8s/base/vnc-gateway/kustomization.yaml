@@ -1,0 +1,6 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - vnc-gateway-deploy.yaml
+  - vnc-gateway-svc.yaml
+  - vnc-gateway-cm.yaml

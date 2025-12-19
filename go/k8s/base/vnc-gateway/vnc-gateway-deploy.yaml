@@ -1,7 +1,6 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  namespace: vnc-gateway
   name: vnc-gateway
 spec:
   selector:
@@ -33,7 +32,7 @@ spec:
                   name: vnc-gateway-cf-warp-secret
                   key: WIREGUARD_ADDRESSES
         - name: squid
-          image: vnc-proxy:squid
+          image: squid:6.13
           imagePullPolicy: Never
           ports:
             - containerPort: 3128

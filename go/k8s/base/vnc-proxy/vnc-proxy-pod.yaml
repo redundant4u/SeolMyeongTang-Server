@@ -1,19 +1,18 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  namespace: vnc-proxy
   name: vnc-proxy
   labels:
     app: vnc-proxy
 spec:
   containers:
     - name: vnc-proxy
-      image: proxy
+      image: vnc-proxy
       imagePullPolicy: Never
       ports:
         - containerPort: 8080
       envFrom:
-        - secretRef:
-            name: vnc-proxy-secret
+        - configMapRef:
+            name: vnc-proxy-cm
   serviceAccountName: vnc-proxy-sa
   automountServiceAccountToken: true

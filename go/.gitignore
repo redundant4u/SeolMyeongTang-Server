@@ -2,3 +2,8 @@ __pycache__
 
 .env
 tmp
+
+cf-warp-key.txt
+smt-secret.txt
+
+.DS_Store

@@ -1,0 +1,14 @@
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: seolmyeongtang-issuer-staging
+spec:
+  acme:
+    email: rafch@naver.com
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: seolmyeongtang-issuer-staging
+    solvers:
+    - http01:
+        ingress:
+          class: traefik

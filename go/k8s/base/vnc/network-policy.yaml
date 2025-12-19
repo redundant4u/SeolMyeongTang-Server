@@ -2,7 +2,6 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: vnc-network-policy
-  namespace: vnc
 spec:
   podSelector:
     matchLabels:
@@ -11,16 +10,12 @@ spec:
   - Egress
   egress:
   - to:
-    - namespaceSelector:
-        matchLabels:
-          kubernetes.io/metadata.name: vnc-gateway
-      podSelector:
+    - podSelector:
         matchLabels:
           app: vnc-gateway
     ports:
     - protocol: TCP
       port: 3128
-
   - ports:
     - protocol: UDP
       port: 53

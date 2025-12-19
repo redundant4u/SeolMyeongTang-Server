@@ -1,7 +1,21 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  namespace: vnc-gateway
+  name: vnc-gateway-gluetun-config-map
+data:
+  VPN_SERVICE_PROVIDER: "custom"
+  VPN_TYPE: "wireguard"
+  VPN_ENDPOINT_IP: "162.159.192.1"
+  VPN_ENDPOINT_PORT: "2408"
+  WIREGUARD_PUBLIC_KEY: "bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo="
+  FIREWALL_INPUT_PORTS: "3128"
+  FIREWALL_OUTBOUND_SUBNETS: "10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
   name: vnc-gateway-squid-config-map
 data:
   squid.conf: |

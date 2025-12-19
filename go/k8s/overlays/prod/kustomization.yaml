@@ -1,0 +1,54 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: smt-prod
+resources:
+  - ../../base
+  - cluster-issuer.yaml
+configMapGenerator:
+  - name: vnc-proxy-cm
+    behavior: merge
+    literals:
+      - K8S_NAMESPACE=smt-prod
+  - name: smt-cm
+    literals:
+      - APP_ENV=production
+      - KUBE_SESSION_NAMESPACE=smt-prod
+secretGenerator:
+  - name: vnc-gateway-cf-warp-secret
+    envs:
+      - cf-warp-key.txt
+  - name: smt-secret
+    envs:
+      - smt-secret.txt
+patches:
+  - patch: |
+      apiVersion: networking.k8s.io/v1
+      kind: Ingress
+      metadata:
+        name: smt-ing
+        annotations:
+          cert-manager.io/cluster-issuer: seolmyeongtang-issuer-staging
+      spec:
+        tls:
+          - hosts:
+              - api.redundant4u.com
+            secretName: api-redundant4u-tls-secret
+        rules:
+          - host: api.redundant4u.com
+            http:
+              paths:
+                - path: /
+                  pathType: Prefix
+                  backend:
+                    service:
+                      name: smt
+                      port:
+                        number: 8090
+                - path: /vnc
+                  pathType: Prefix
+                  backend:
+                    service:
+                      name: vnc-proxy
+                      port:
+                        number: 8080
+
