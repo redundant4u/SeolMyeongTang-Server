@@ -2,6 +2,7 @@ package session
 
 import (
 	"fmt"
+	"time"
 
 	corev1 "k8s.io/api/core/v1"
 )
@@ -11,6 +12,7 @@ type getPodsResponse struct {
 	SessionId   string `json:"sessionId"`
 	Image       string `json:"image"`
 	Description string `json:"description"`
+	TTL         int64  `json:"ttl"`
 }
 
 type createPodRequest struct {
@@ -50,11 +52,22 @@ func toGetSessionsResponse(pods []corev1.Pod) ([]getPodsResponse, error) {
 			description = ""
 		}
 
+		var ttl int64 = 0
+		if expiredAtStr, ok := p.Annotations["expired-at"]; ok {
+			expiredAt, err := time.Parse(time.RFC3339, expiredAtStr)
+			if err != nil {
+				return nil, fmt.Errorf("pod annotation expired-at is invalid")
+			}
+
+			ttl = max(int64(time.Until(expiredAt).Seconds()), 0)
+		}
+
 		res = append(res, getPodsResponse{
 			Name:        name,
 			SessionId:   p.Name,
 			Image:       image,
 			Description: description,
+			TTL:         ttl,
 		})
 	}
 
