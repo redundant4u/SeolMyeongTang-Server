@@ -4,6 +4,7 @@ namespace: smt-dev
 resources:
   - ../../base
   - cluster-issuer.yaml
+  - selaed-secrets.yaml
 images:
   - name: smt
     newTag: dev
@@ -16,13 +17,6 @@ configMapGenerator:
     literals:
       - APP_ENV=development
       - KUBE_SESSION_NAMESPACE=smt-dev
-secretGenerator:
-  - name: vnc-gateway-cf-warp-secret
-    envs:
-      - cf-warp-key.txt
-  - name: smt-secret
-    envs:
-      - smt-secret.txt
 patches:
   - patch: |
       apiVersion: networking.k8s.io/v1
