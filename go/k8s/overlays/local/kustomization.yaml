@@ -5,9 +5,9 @@ resources:
   - ../../base
 images:
   - name: smt
-    newTag: 2.0.0
+    newTag: "2.0.0"
   - name: vnc-proxy
-    newTag: 1.0.0
+    newTag: "1.0.0"
 configMapGenerator:
   - name: vnc-proxy-cm
     behavior: merge
