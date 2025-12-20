@@ -33,7 +33,7 @@ spec:
                   key: WIREGUARD_ADDRESSES
         - name: squid
           image: squid:6.13
-          imagePullPolicy: Never
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 3128
           volumeMounts:

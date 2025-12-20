@@ -4,6 +4,16 @@ namespace: smt-prod
 resources:
   - ../../base
   - cluster-issuer.yaml
+images:
+  - name: smt
+    newName: 982402893832.dkr.ecr.ap-northeast-2.amazonaws.com/smt-server
+    newTag: 2.0.0
+  - name: vnc-proxy
+    newName: 982402893832.dkr.ecr.ap-northeast-2.amazonaws.com/smt-vnc-proxy
+    newTag: 1.0.0
+  - name: squid
+    newName: 982402893832.dkr.ecr.ap-northeast-2.amazonaws.com/squid
+    newTag: 6.13
 configMapGenerator:
   - name: vnc-proxy-cm
     behavior: merge
