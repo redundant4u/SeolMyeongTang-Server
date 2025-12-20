@@ -14,7 +14,7 @@ spec:
       containers:
         - name: smt
           image: smt
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Never
           ports:
             - containerPort: 8090
           volumeMounts:

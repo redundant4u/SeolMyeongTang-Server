@@ -1,0 +1,12 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vnc-gateway
+spec:
+  template:
+    spec:
+      imagePullSecrets:
+        - name: ecr-secret
+      containers:
+        - name: squid
+          imagePullPolicy: IfNotPresent

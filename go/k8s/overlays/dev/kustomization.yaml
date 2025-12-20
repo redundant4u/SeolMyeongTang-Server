@@ -1,58 +1,39 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
+
 namespace: smt-dev
+
 resources:
   - ../../base
   - cluster-issuer.yaml
   - selaed-secrets.yaml
+
 images:
   - name: smt
     newName: 982402893832.dkr.ecr.ap-northeast-2.amazonaws.com/smt-server
     newTag: "2.0.0"
+
   - name: vnc-proxy
     newName: 982402893832.dkr.ecr.ap-northeast-2.amazonaws.com/smt-vnc-proxy
     newTag: "1.0.0"
+
   - name: squid
     newName: 982402893832.dkr.ecr.ap-northeast-2.amazonaws.com/squid
     newTag: "6.13"
+
 configMapGenerator:
   - name: vnc-proxy-cm
     behavior: merge
     literals:
       - K8S_NAMESPACE=smt-dev
+
   - name: smt-cm
     literals:
       - APP_ENV=development
       - KUBE_SESSION_NAMESPACE=smt-dev
-patches:
-  - patch: |
-      apiVersion: networking.k8s.io/v1
-      kind: Ingress
-      metadata:
-        name: smt-ing
-        annotations:
-          cert-manager.io/cluster-issuer: seolmyeongtang-issuer-staging
-      spec:
-        tls:
-          - hosts:
-              - api.redundant4u.com
-            secretName: api-redundant4u-tls-secret
-        rules:
-          - host: api.redundant4u.com
-            http:
-              paths:
-                - path: /
-                  pathType: Prefix
-                  backend:
-                    service:
-                      name: smt
-                      port:
-                        number: 8090
-                - path: /vnc
-                  pathType: Prefix
-                  backend:
-                    service:
-                      name: vnc-proxy
-                      port:
-                        number: 8080
 
+patches:
+  - path: patches/deploy-smt.yaml
+  - path: patches/deploy-vnc-proxy.yaml
+  - path: patches/deploy-vnc-gateway.yaml
+  - path: patches/ingress.yaml
