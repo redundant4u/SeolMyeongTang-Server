@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: vnc-proxy
+  labels:
+    app: vnc-proxy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vnc-proxy
+  template:
+    metadata:
+      labels:
+        app: vnc-proxy
+    spec:
+      containers:
+        - name: vnc-proxy
+          image: vnc-proxy
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: vnc-proxy-cm
+      serviceAccountName: vnc-proxy-sa
+      automountServiceAccountToken: true
