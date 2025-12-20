@@ -3,14 +3,15 @@ kind: Ingress
 metadata:
   name: smt-ing
   annotations:
-    cert-manager.io/cluster-issuer: seolmyeongtang-issuer-staging
+    cert-manager.io/cluster-issuer: seolmyeongtang-issuer-dev
+    traefik.ingress.kubernetes.io/whitelist-source-range: 121.157.209.126/32
 spec:
   tls:
     - hosts:
-        - api.redundant4u.com
+        - dev.redundant4u.com
       secretName: api-redundant4u-tls-secret
   rules:
-    - host: api.redundant4u.com
+    - host: dev.redundant4u.com
       http:
         paths:
           - path: /
