@@ -16,11 +16,10 @@ func New(ddb *dynamodb.Client, kube *session.Kube) *echo.Echo {
 
 	e.Validator = validator.New()
 
-	// e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: []string{"http://localhost:3001"},
+		AllowOrigins: []string{"https://redundant4u.com"},
 		AllowMethods: []string{
 			echo.GET,
 			echo.POST,
