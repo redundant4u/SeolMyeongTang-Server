@@ -31,20 +31,24 @@ func InitEnv() {
 	}
 }
 
-func loadEnv() (env *env) {
-	viper.SetConfigFile(".env")
-	viper.AddConfigPath(".")
-	viper.SetConfigType("env")
+func loadEnv() *env {
+	v := viper.New() // 전역 viper보다는 지역 인스턴스 사용 권장
+	v.SetConfigFile(".env")
+	v.SetConfigType("env")
+	v.AddConfigPath(".")
 
-	if err := viper.ReadInConfig(); err != nil {
+	if err := v.ReadInConfig(); err != nil {
 		logger.Fatal(err, "Unable to read env file")
 	}
 
-	if err := viper.Unmarshal(&env); err != nil {
+	v.AutomaticEnv()
+
+	var e env
+	if err := v.Unmarshal(&e); err != nil {
 		logger.Fatal(err, "Unable to unmarshal env file")
 	}
 
-	return
+	return &e
 }
 
 func validateEnv(e *env) error {
