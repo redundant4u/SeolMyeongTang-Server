@@ -17,6 +17,10 @@ func Init(e *echo.Echo, ddb *dynamodb.Client) error {
 }
 
 func registerRoutes(e *echo.Echo, h *handler) {
-	e.GET("/post/:postId", h.getPost)
-	e.GET("/post", h.getPosts)
+	postGroup := e.Group("/post")
+
+	postGroup.Use(denyPostMiddleware())
+
+	postGroup.GET("/post/:postId", h.getPost)
+	postGroup.GET("/post", h.getPosts)
 }
