@@ -19,6 +19,7 @@ func (h *handler) getSessions(c echo.Context) error {
 	clientId := c.Request().Header.Get("X-Client-Id")
 	if clientId == "" {
 		logger.Error("getSessions client-id header is not set", nil)
+		return response.BadRequest(c)
 	}
 
 	ctx := c.Request().Context()
