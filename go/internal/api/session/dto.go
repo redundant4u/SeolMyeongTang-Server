@@ -2,6 +2,7 @@ package session
 
 import (
 	"fmt"
+	"seolmyeong-tang-server/internal/pkg/logger"
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
@@ -26,6 +27,7 @@ type createPodResponse struct {
 	SessionId   string `json:"sessionId"`
 	Image       string `json:"image"`
 	Description string `json:"description"`
+	TTL         int64  `json:"ttl"`
 }
 
 type deletePodRequest struct {
@@ -52,15 +54,7 @@ func toGetSessionsResponse(pods []corev1.Pod) ([]getPodsResponse, error) {
 			description = ""
 		}
 
-		var ttl int64 = 0
-		if expiredAtStr, ok := p.Annotations["expired-at"]; ok {
-			expiredAt, err := time.Parse(time.RFC3339, expiredAtStr)
-			if err != nil {
-				return nil, fmt.Errorf("pod annotation expired-at is invalid")
-			}
-
-			ttl = max(int64(time.Until(expiredAt).Seconds()), 0)
-		}
+		ttl := extractTTL(&p)
 
 		res = append(res, getPodsResponse{
 			Name:        name,
@@ -87,10 +81,27 @@ func toCreateSessionResponse(pod *corev1.Pod, sessionId string) (createPodRespon
 		description = ""
 	}
 
+	ttl := extractTTL(pod)
+
 	return createPodResponse{
 		Name:        name,
 		SessionId:   sessionId,
 		Image:       image,
 		Description: description,
+		TTL:         ttl,
 	}, nil
+}
+
+func extractTTL(pod *corev1.Pod) int64 {
+	if expiredAtStr, ok := pod.Annotations["expired-at"]; ok {
+		expiredAt, err := time.Parse(time.RFC3339, expiredAtStr)
+		if err != nil {
+			logger.Error("pod annotation expired-at is invalid", err)
+			return 0
+		}
+
+		ttl := max(int64(time.Until(expiredAt).Seconds()), 0)
+		return ttl
+	}
+	return 0
 }
