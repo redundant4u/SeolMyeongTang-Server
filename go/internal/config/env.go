@@ -14,6 +14,8 @@ type env struct {
 	KUBE_CONFIG            string `mapstructure:"KUBE_CONFIG"`
 	KUBE_SESSION_NAMESPACE string `mapstructure:"KUBE_SESSION_NAMESPACE" required:"true"`
 
+	CF_TUNNEL_ID string `mapstructure:"CF_TUNNEL_ID" required:"true"`
+
 	AWS_ACCESS_KEY string `mapstructure:"AWS_ACCESS_KEY" required:"true"`
 	AWS_SECRET_KEY string `mapstructure:"AWS_SECRET_KEY" required:"true"`
 	AWS_REGION     string `mapstructure:"AWS_REGION"`

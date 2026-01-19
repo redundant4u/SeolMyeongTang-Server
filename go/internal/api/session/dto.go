@@ -31,7 +31,7 @@ type createPodResponse struct {
 }
 
 type deletePodRequest struct {
-	SessionId string `json:"sessionId" validate:"required"`
+	SessionId string `json:"sessionId" validate:"required,sessionId"`
 }
 
 type createClientIdResponse struct {

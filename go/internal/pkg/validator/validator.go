@@ -13,6 +13,7 @@ type EchoValidator struct {
 func New() *EchoValidator {
 	v := validator.New()
 	v.RegisterValidation("k8slabel", validateK8sLabel)
+	v.RegisterValidation("sessionId", validateSessionId)
 
 	return &EchoValidator{v: v}
 }
@@ -27,6 +28,16 @@ func validateK8sLabel(fl validator.FieldLevel) bool {
 
 	reg := regexp.MustCompile(pattern)
 	result := reg.MatchString(label)
+
+	return result
+}
+
+func validateSessionId(fl validator.FieldLevel) bool {
+	sessionId := fl.Field().String()
+	pattern := `^[a-z0-9]{8}$`
+
+	reg := regexp.MustCompile(pattern)
+	result := reg.MatchString(sessionId)
 
 	return result
 }

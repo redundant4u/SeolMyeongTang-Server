@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"fmt"
+	"seolmyeong-tang-server/internal/config"
 	"seolmyeong-tang-server/internal/pkg/k8s"
 	"time"
 
@@ -81,11 +82,102 @@ func (k *Kube) getSessions(ctx context.Context, clientId string) ([]corev1.Pod, 
 }
 
 func (k *Kube) createSession(ctx context.Context, info createPod) (*corev1.Pod, error) {
+	err := k.createCloudflaredConfigMap(ctx, info.sessionId)
+	if err != nil {
+		return nil, err
+	}
+
 	proxyURL := `http://vnc-gateway.` + k.namespace + `.svc.cluster.local:3128`
 	noProxyList := "localhost,127.0.0.1,.svc,.cluster.local,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
 
 	createdAt := time.Now().UTC()
 	expiredAt := createdAt.Add(10 * time.Minute)
+
+	sessionContainer := corev1.Container{
+		Name:            info.sessionId,
+		Image:           "vnc:" + info.image,
+		ImagePullPolicy: "Never",
+		Env: []corev1.EnvVar{
+			{Name: "HTTP_PROXY", Value: proxyURL},
+			{Name: "http_proxy", Value: proxyURL},
+			{Name: "HTTPS_PROXY", Value: proxyURL},
+			{Name: "https_proxy", Value: proxyURL},
+			{Name: "NO_PROXY", Value: noProxyList},
+			{Name: "no_proxy", Value: noProxyList},
+		},
+		Ports: []corev1.ContainerPort{
+			{
+				Name:          "vnc",
+				ContainerPort: 5901,
+			},
+		},
+		VolumeMounts: []corev1.VolumeMount{
+			{
+				Name:      "workspace",
+				MountPath: "/home/app",
+			},
+		},
+		Resources: corev1.ResourceRequirements{
+			Requests: corev1.ResourceList{
+				corev1.ResourceCPU:              resource.MustParse("500m"),
+				corev1.ResourceMemory:           resource.MustParse("1Gi"),
+				corev1.ResourceEphemeralStorage: resource.MustParse("3Gi"),
+			},
+			Limits: corev1.ResourceList{
+				corev1.ResourceCPU:              resource.MustParse("1"),
+				corev1.ResourceMemory:           resource.MustParse("2Gi"),
+				corev1.ResourceEphemeralStorage: resource.MustParse("5Gi"),
+			},
+		},
+	}
+
+	cloudflaredContainer := corev1.Container{
+		Name:  "cloudflared",
+		Image: "cloudflare/cloudflared:1800-17533b124c22",
+		Args: []string{
+			"tunnel",
+			"--config",
+			"/etc/cloudflared/config.yml",
+			"--no-autoupdate",
+			"run",
+		},
+		VolumeMounts: []corev1.VolumeMount{
+			{
+				Name:      "cloudflared-config",
+				MountPath: "/etc/cloudflared/config.yml",
+				SubPath:   "config.yml",
+			},
+			{
+				Name:      "cloudflared-credentials",
+				MountPath: "/etc/cloudflared/credentials.json",
+				SubPath:   "credentials.json",
+			},
+		},
+		SecurityContext: &corev1.SecurityContext{
+			RunAsNonRoot: func() *bool {
+				b := true
+				return &b
+			}(),
+			RunAsUser: func() *int64 {
+				u := int64(65532)
+				return &u
+			}(),
+			AllowPrivilegeEscalation: func() *bool {
+				b := false
+				return &b
+			}(),
+		},
+		Resources: corev1.ResourceRequirements{
+			Requests: corev1.ResourceList{
+				corev1.ResourceCPU:    resource.MustParse("50m"),
+				corev1.ResourceMemory: resource.MustParse("64Mi"),
+			},
+			Limits: corev1.ResourceList{
+				corev1.ResourceCPU:    resource.MustParse("200m"),
+				corev1.ResourceMemory: resource.MustParse("256Mi"),
+			},
+		},
+	}
 
 	podSpec := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
@@ -120,45 +212,28 @@ func (k *Kube) createSession(ctx context.Context, info createPod) (*corev1.Pod, 
 						},
 					},
 				},
-			},
-			Containers: []corev1.Container{
 				{
-					Name:            info.sessionId,
-					Image:           "vnc:" + info.image,
-					ImagePullPolicy: "Never",
-					Env: []corev1.EnvVar{
-						{Name: "HTTP_PROXY", Value: proxyURL},
-						{Name: "http_proxy", Value: proxyURL},
-						{Name: "HTTPS_PROXY", Value: proxyURL},
-						{Name: "https_proxy", Value: proxyURL},
-						{Name: "NO_PROXY", Value: noProxyList},
-						{Name: "no_proxy", Value: noProxyList},
-					},
-					Ports: []corev1.ContainerPort{
-						{
-							Name:          "vnc",
-							ContainerPort: 5901,
-						},
-					},
-					VolumeMounts: []corev1.VolumeMount{
-						{
-							Name:      "workspace",
-							MountPath: "/home/app",
-						},
-					},
-					Resources: corev1.ResourceRequirements{
-						Requests: corev1.ResourceList{
-							corev1.ResourceCPU:              resource.MustParse("500m"),
-							corev1.ResourceMemory:           resource.MustParse("1Gi"),
-							corev1.ResourceEphemeralStorage: resource.MustParse("3Gi"),
-						},
-						Limits: corev1.ResourceList{
-							corev1.ResourceCPU:              resource.MustParse("1"),
-							corev1.ResourceMemory:           resource.MustParse("2Gi"),
-							corev1.ResourceEphemeralStorage: resource.MustParse("5Gi"),
+					Name: "cloudflared-credentials",
+					VolumeSource: corev1.VolumeSource{
+						Secret: &corev1.SecretVolumeSource{
+							SecretName: "cloudflared-credentials",
 						},
 					},
 				},
+				{
+					Name: "cloudflared-config",
+					VolumeSource: corev1.VolumeSource{
+						ConfigMap: &corev1.ConfigMapVolumeSource{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "cloudflared-config-" + info.sessionId,
+							},
+						},
+					},
+				},
+			},
+			Containers: []corev1.Container{
+				sessionContainer,
+				cloudflaredContainer,
 			},
 		},
 	}
@@ -185,6 +260,11 @@ func (k *Kube) createSession(ctx context.Context, info createPod) (*corev1.Pod, 
 }
 
 func (k *Kube) deleteSession(ctx context.Context, info deletePod) error {
+	err := k.deleteCloudflaredConfigMap(ctx, info.sessionId)
+	if err != nil {
+		return err
+	}
+
 	pods, err := k.getPods(ctx, info.clientId)
 	if err != nil {
 		return err
@@ -211,6 +291,59 @@ func (k *Kube) deleteSession(ctx context.Context, info deletePod) error {
 			return fmt.Errorf("code=%d reason=%s message=%s", st.Code, st.Reason, st.Message)
 		}
 
+		return err
+	}
+
+	return nil
+}
+
+func (k *Kube) createCloudflaredConfigMap(ctx context.Context, sessionId string) error {
+	configMapName := "cloudflared-config-" + sessionId
+	// NOTE: config.yml는 space로 구분된 포맷이므로 탭 문자를 사용하면 안됨
+	config := fmt.Sprintf(`
+tunnel: %s
+credentials-file: /etc/cloudflared/credentials.json
+
+ingress:
+  - hostname: %s.tunnel.redundant4u.com
+    service: http://localhost:8080
+  - service: http_status:404`, config.Env.CF_TUNNEL_ID, sessionId)
+
+	configMap := &corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: k.namespace,
+			Name:      configMapName,
+		},
+		Data: map[string]string{
+			"config.yml": config,
+		},
+	}
+
+	_, err := k.k8s.Clientset.CoreV1().
+		ConfigMaps(k.namespace).
+		Create(ctx, configMap, metav1.CreateOptions{})
+	if err != nil {
+		if statusErr, ok := err.(kerrors.APIStatus); ok {
+			st := statusErr.Status()
+			return fmt.Errorf("code=%d reason=%s message=%s", st.Code, st.Reason, st.Message)
+		}
+		return err
+	}
+
+	return nil
+}
+
+func (k *Kube) deleteCloudflaredConfigMap(ctx context.Context, sessionId string) error {
+	configMapName := "cloudflared-config-" + sessionId
+
+	if err := k.k8s.Clientset.CoreV1().
+		ConfigMaps(k.namespace).
+		Delete(ctx, configMapName, metav1.DeleteOptions{}); err != nil {
+
+		if statusErr, ok := err.(kerrors.APIStatus); ok {
+			st := statusErr.Status()
+			return fmt.Errorf("code=%d reason=%s message=%s", st.Code, st.Reason, st.Message)
+		}
 		return err
 	}
 
