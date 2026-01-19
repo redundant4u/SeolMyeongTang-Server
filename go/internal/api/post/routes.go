@@ -21,6 +21,6 @@ func registerRoutes(e *echo.Echo, h *handler) {
 
 	postGroup.Use(denyPostMiddleware())
 
-	postGroup.GET("/post/:postId", h.getPost)
-	postGroup.GET("/post", h.getPosts)
+	postGroup.GET("/:postId", h.getPost)
+	postGroup.GET("", h.getPosts)
 }
