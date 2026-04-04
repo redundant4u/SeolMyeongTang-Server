@@ -235,6 +235,10 @@ func (k *Kube) createSession(ctx context.Context, info createPod) (*corev1.Pod, 
 				sessionContainer,
 				cloudflaredContainer,
 			},
+			RuntimeClassName: func() *string {
+				s := "kata-qemu-runtime-rs"
+				return &s
+			}(),
 		},
 	}
 
