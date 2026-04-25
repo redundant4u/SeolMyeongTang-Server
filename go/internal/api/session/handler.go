@@ -1,7 +1,10 @@
 package session
 
 import (
+	"log/slog"
+
 	"seolmyeong-tang-server/internal/pkg/logger"
+	"seolmyeong-tang-server/internal/pkg/metrics"
 	"seolmyeong-tang-server/internal/pkg/response"
 
 	"github.com/labstack/echo/v4"
@@ -16,22 +19,23 @@ func NewHandler(kube *Kube) *handler {
 }
 
 func (h *handler) getSessions(c echo.Context) error {
+	ctx := c.Request().Context()
+
 	clientId := c.Request().Header.Get("X-Client-Id")
 	if clientId == "" {
-		logger.Error("getSessions client-id header is not set", nil)
+		logger.WarnEvent(ctx, "client_id_missing", "getSessions missing X-Client-Id header")
 		return response.BadRequest(c)
 	}
 
-	ctx := c.Request().Context()
 	pods, err := h.kube.getSessions(ctx, clientId)
 	if err != nil {
-		logger.Error("failed to get pods", err)
+		logger.ErrorEvent(ctx, "session_list_failed", "failed to list sessions", err)
 		return response.BadRequest(c)
 	}
 
 	res, err := toGetSessionsResponse(pods)
 	if err != nil {
-		logger.Error("failed to map getSessions response", err)
+		logger.ErrorEvent(ctx, "session_list_response_failed", "failed to map getSessions response", err)
 		return response.BadRequest(c)
 	}
 
@@ -39,37 +43,45 @@ func (h *handler) getSessions(c echo.Context) error {
 }
 
 func (h *handler) createSession(c echo.Context) error {
+	ctx := c.Request().Context()
+
 	clientId := c.Request().Header.Get("X-Client-Id")
 	if clientId == "" {
-		logger.Error("createSession X-Client-Id header is not set", nil)
+		logger.WarnEvent(ctx, "client_id_missing", "createSession missing X-Client-Id header")
 		return response.BadRequest(c)
 	}
 
 	var req createPodRequest
 	if err := c.Bind(&req); err != nil {
-		logger.Error("createSession invalid request body", nil)
+		logger.WarnEvent(ctx, "session_create_invalid_body", "createSession invalid request body", slog.String("error", err.Error()))
 		return response.BadRequest(c)
 	}
 
 	if err := c.Validate(&req); err != nil {
-		logger.Error("createSession validation failed", err)
+		logger.WarnEvent(ctx, "session_create_validation_failed", "createSession validation failed", slog.String("error", err.Error()))
 		return response.BadRequest(c)
 	}
 
-	ctx := c.Request().Context()
-
 	pods, err := h.kube.getSessions(ctx, clientId)
 	if err != nil {
-		logger.Error("failed to get pods", err)
+		logger.ErrorEvent(ctx, "session_list_failed", "failed to list sessions before create", err)
 		return response.BadRequest(c)
 	}
 
 	if len(pods) >= 4 {
-		logger.Error("session limit reached", nil)
+		metrics.RecordPodCreateFailure("capacity_limit")
+		logger.WarnEvent(ctx, "session_create_rejected", "Session limit reached",
+			slog.String("error_code", "capacity_limit"),
+		)
 		return response.BadRequest(c)
 	}
 
 	sessionId := h.kube.secureRandomString(8)
+	metrics.RecordPodCreateRequest(req.Image)
+	logger.InfoEvent(ctx, "session_create_requested", "Session creation requested",
+		slog.String("session_id", sessionId),
+		slog.String("requested_image", req.Image),
+	)
 
 	info := createPod{
 		name:        req.Name,
@@ -81,15 +93,19 @@ func (h *handler) createSession(c echo.Context) error {
 
 	pod, err := h.kube.createSession(ctx, info)
 	if err != nil {
-		logger.Error("failed to create pods", err)
+		logger.ErrorEvent(ctx, "session_create_failed", "Session creation failed", err,
+			slog.String("session_id", sessionId),
+		)
 		return response.BadRequest(c)
 	}
-
-	logger.Info("pod is created: %s", sessionId)
+	logger.InfoEvent(ctx, "session_create_succeeded", "Session creation succeeded",
+		slog.String("session_id", sessionId),
+		slog.String("pod_name", pod.Name),
+	)
 
 	res, err := toCreateSessionResponse(pod, sessionId)
 	if err != nil {
-		logger.Error("failed to convert createSession response", err)
+		logger.ErrorEvent(ctx, "session_create_response_failed", "failed to convert createSession response", err)
 		return response.BadRequest(c)
 	}
 
@@ -97,9 +113,11 @@ func (h *handler) createSession(c echo.Context) error {
 }
 
 func (h *handler) deleteSession(c echo.Context) error {
+	ctx := c.Request().Context()
+
 	clientId := c.Request().Header.Get("X-Client-Id")
 	if clientId == "" {
-		logger.Error("deleteSession X-Client-Id header is not set", nil)
+		logger.WarnEvent(ctx, "client_id_missing", "deleteSession missing X-Client-Id header")
 		return response.BadRequest(c)
 	}
 
@@ -109,7 +127,7 @@ func (h *handler) deleteSession(c echo.Context) error {
 	}
 
 	if err := c.Validate(&req); err != nil {
-		logger.Error("deleteSession validation failed", err)
+		logger.WarnEvent(ctx, "session_delete_validation_failed", "deleteSession validation failed", slog.String("error", err.Error()))
 		return response.BadRequest(c)
 	}
 
@@ -118,22 +136,31 @@ func (h *handler) deleteSession(c echo.Context) error {
 		sessionId: req.SessionId,
 	}
 
-	ctx := c.Request().Context()
+	metrics.RecordPodDeleteRequest()
+	logger.InfoEvent(ctx, "session_delete_requested", "Session deletion requested",
+		slog.String("session_id", req.SessionId),
+	)
 
-	err := h.kube.deleteSession(ctx, info)
-	if err != nil {
-		logger.Error("failed to delete session", err)
+	if err := h.kube.deleteSession(ctx, info); err != nil {
+		logger.ErrorEvent(ctx, "session_delete_failed", "Session deletion failed", err,
+			slog.String("session_id", req.SessionId),
+		)
 		return response.BadRequest(c)
 	}
-
-	logger.Info("pod is deleted: %s", req.SessionId)
+	logger.InfoEvent(ctx, "session_delete_succeeded", "Session deletion succeeded",
+		slog.String("session_id", req.SessionId),
+	)
 
 	return response.NoContent(c)
 }
 
 func (h *handler) createClientId(c echo.Context) error {
+	ctx := c.Request().Context()
 	clientId := h.kube.secureRandomString(8)
-	logger.Info("generated client id: %s", clientId)
+	logger.InfoEvent(ctx, "client_id_generated", "Client identifier generated",
+		slog.String("client_id", clientId),
+		slog.String("client_display_id", logger.ClientDisplayID(clientId)),
+	)
 
 	res := createClientIdResponse{
 		ClientId: clientId,

@@ -4,13 +4,15 @@ import (
 	"context"
 	"crypto/rand"
 	"fmt"
-	"seolmyeong-tang-server/internal/config"
-	"seolmyeong-tang-server/internal/pkg/k8s"
+	"log/slog"
 	"time"
 
+	"seolmyeong-tang-server/internal/config"
+	"seolmyeong-tang-server/internal/pkg/k8s"
+	"seolmyeong-tang-server/internal/pkg/logger"
+	"seolmyeong-tang-server/internal/pkg/metrics"
+
 	corev1 "k8s.io/api/core/v1"
-	kerrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 )
@@ -35,16 +37,10 @@ type deletePod struct {
 }
 
 func NewKube(k8s *k8s.Client, namespace string) *Kube {
-	gc := newGC(
-		k8s,
-		namespace,
-		60,
-	)
-
 	return &Kube{
 		k8s:       k8s,
 		namespace: namespace,
-		Gc:        gc,
+		Gc:        newGC(k8s, namespace, 60),
 	}
 }
 
@@ -56,11 +52,11 @@ func (k *Kube) getPods(ctx context.Context, clientId string) ([]corev1.Pod, erro
 
 	pods, err := k.k8s.Clientset.CoreV1().
 		Pods(k.namespace).
-		List(ctx, metav1.ListOptions{
-			LabelSelector: selector,
-		})
+		List(ctx, metav1.ListOptions{LabelSelector: selector})
 	if err != nil {
-		return nil, err
+		return nil, recordKubeFailure(ctx, "list_pods", lifecycleNone, err,
+			slog.String("namespace", k.namespace),
+		)
 	}
 
 	running := make([]corev1.Pod, 0, len(pods.Items))
@@ -68,13 +64,12 @@ func (k *Kube) getPods(ctx context.Context, clientId string) ([]corev1.Pod, erro
 		if p.ObjectMeta.DeletionTimestamp != nil {
 			continue
 		}
-
 		if p.Status.Phase == corev1.PodRunning || p.Status.Phase == corev1.PodPending {
 			running = append(running, p)
 		}
 	}
 
-	return running, err
+	return running, nil
 }
 
 func (k *Kube) getSessions(ctx context.Context, clientId string) ([]corev1.Pod, error) {
@@ -82,195 +77,54 @@ func (k *Kube) getSessions(ctx context.Context, clientId string) ([]corev1.Pod, 
 }
 
 func (k *Kube) createSession(ctx context.Context, info createPod) (*corev1.Pod, error) {
-	err := k.createCloudflaredConfigMap(ctx, info.sessionId)
-	if err != nil {
-		return nil, err
-	}
+	logger.InfoEvent(ctx, "pod_create_started", "VNC pod creation started",
+		slog.String("session_id", info.sessionId),
+		slog.String("pod_name", info.sessionId),
+		slog.String("namespace", k.namespace),
+		slog.String("requested_image", info.image),
+	)
 
-	proxyURL := `http://vnc-gateway.` + k.namespace + `.svc.cluster.local:3128`
-	noProxyList := "localhost,127.0.0.1,.svc,.cluster.local,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
-
-	createdAt := time.Now().UTC()
-	expiredAt := createdAt.Add(10 * time.Minute)
-
-	sessionContainer := corev1.Container{
-		Name:            info.sessionId,
-		Image:           "vnc:" + info.image,
-		ImagePullPolicy: "Never",
-		Env: []corev1.EnvVar{
-			{Name: "HTTP_PROXY", Value: proxyURL},
-			{Name: "http_proxy", Value: proxyURL},
-			{Name: "HTTPS_PROXY", Value: proxyURL},
-			{Name: "https_proxy", Value: proxyURL},
-			{Name: "NO_PROXY", Value: noProxyList},
-			{Name: "no_proxy", Value: noProxyList},
-		},
-		Ports: []corev1.ContainerPort{
-			{
-				Name:          "vnc",
-				ContainerPort: 5901,
-			},
-		},
-		VolumeMounts: []corev1.VolumeMount{
-			{
-				Name:      "workspace",
-				MountPath: "/home/app",
-			},
-		},
-		Resources: corev1.ResourceRequirements{
-			Requests: corev1.ResourceList{
-				corev1.ResourceCPU:              resource.MustParse("500m"),
-				corev1.ResourceMemory:           resource.MustParse("1Gi"),
-				corev1.ResourceEphemeralStorage: resource.MustParse("3Gi"),
-			},
-			Limits: corev1.ResourceList{
-				corev1.ResourceCPU:              resource.MustParse("1"),
-				corev1.ResourceMemory:           resource.MustParse("2Gi"),
-				corev1.ResourceEphemeralStorage: resource.MustParse("5Gi"),
-			},
-		},
-	}
-
-	cloudflaredContainer := corev1.Container{
-		Name:  "cloudflared",
-		Image: "cloudflare/cloudflared:1800-17533b124c22",
-		Args: []string{
-			"tunnel",
-			"--config",
-			"/etc/cloudflared/config.yml",
-			"--no-autoupdate",
-			"run",
-		},
-		VolumeMounts: []corev1.VolumeMount{
-			{
-				Name:      "cloudflared-config",
-				MountPath: "/etc/cloudflared/config.yml",
-				SubPath:   "config.yml",
-			},
-			{
-				Name:      "cloudflared-credentials",
-				MountPath: "/etc/cloudflared/credentials.json",
-				SubPath:   "credentials.json",
-			},
-		},
-		SecurityContext: &corev1.SecurityContext{
-			RunAsNonRoot: func() *bool {
-				b := true
-				return &b
-			}(),
-			RunAsUser: func() *int64 {
-				u := int64(65532)
-				return &u
-			}(),
-			AllowPrivilegeEscalation: func() *bool {
-				b := false
-				return &b
-			}(),
-		},
-		Resources: corev1.ResourceRequirements{
-			Requests: corev1.ResourceList{
-				corev1.ResourceCPU:    resource.MustParse("50m"),
-				corev1.ResourceMemory: resource.MustParse("64Mi"),
-			},
-			Limits: corev1.ResourceList{
-				corev1.ResourceCPU:    resource.MustParse("200m"),
-				corev1.ResourceMemory: resource.MustParse("256Mi"),
-			},
-		},
-	}
-
-	podSpec := &corev1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: k.namespace,
-			Name:      info.sessionId,
-			Labels: map[string]string{
-				"app":       "vnc",
-				"name":      info.name,
-				"client-id": info.clientId,
-			},
-			Annotations: map[string]string{
-				"description": info.description,
-				"created-at":  createdAt.Format(time.RFC3339),
-				"expired-at":  expiredAt.Format(time.RFC3339),
-			},
-		},
-		Spec: corev1.PodSpec{
-			AutomountServiceAccountToken: func() *bool {
-				b := false
-				return &b
-			}(),
-			RestartPolicy: corev1.RestartPolicyNever,
-			Volumes: []corev1.Volume{
-				{
-					Name: "workspace",
-					VolumeSource: corev1.VolumeSource{
-						EmptyDir: &corev1.EmptyDirVolumeSource{
-							SizeLimit: func() *resource.Quantity {
-								q := resource.MustParse("5Gi")
-								return &q
-							}(),
-						},
-					},
-				},
-				{
-					Name: "cloudflared-credentials",
-					VolumeSource: corev1.VolumeSource{
-						Secret: &corev1.SecretVolumeSource{
-							SecretName: "cloudflared-credentials",
-						},
-					},
-				},
-				{
-					Name: "cloudflared-config",
-					VolumeSource: corev1.VolumeSource{
-						ConfigMap: &corev1.ConfigMapVolumeSource{
-							LocalObjectReference: corev1.LocalObjectReference{
-								Name: "cloudflared-config-" + info.sessionId,
-							},
-						},
-					},
-				},
-			},
-			Containers: []corev1.Container{
-				sessionContainer,
-				cloudflaredContainer,
-			},
-			RuntimeClassName: func() *string {
-				s := "kata-qemu-runtime-rs"
-				return &s
-			}(),
-		},
+	if err := k.createCloudflaredConfigMap(ctx, info.sessionId); err != nil {
+		return nil, recordKubeFailure(ctx, "create_configmap", lifecyclePodCreate, err,
+			slog.String("session_id", info.sessionId),
+			slog.String("pod_name", info.sessionId),
+			slog.String("namespace", k.namespace),
+		)
 	}
 
 	pod, err := k.k8s.Clientset.CoreV1().
 		Pods(k.namespace).
-		Create(ctx, podSpec, metav1.CreateOptions{})
+		Create(ctx, buildSessionPodSpec(info, k.namespace, time.Now()), metav1.CreateOptions{})
 	if err != nil {
-		if statusErr, ok := err.(kerrors.APIStatus); ok {
-			st := statusErr.Status()
-
-			return nil, fmt.Errorf(
-				"code=%d reason=%s message=%s",
-				st.Code,
-				st.Reason,
-				st.Message,
-			)
-		}
-
-		return nil, err
+		return nil, recordKubeFailure(ctx, "create_pod", lifecyclePodCreate, err,
+			slog.String("session_id", info.sessionId),
+			slog.String("pod_name", info.sessionId),
+			slog.String("namespace", k.namespace),
+		)
 	}
+
+	metrics.RecordPodCreateSuccess()
+	metrics.IncActiveSessions()
+	logger.InfoEvent(ctx, "pod_create_succeeded", "VNC pod creation succeeded",
+		slog.String("session_id", info.sessionId),
+		slog.String("pod_name", pod.Name),
+		slog.String("namespace", k.namespace),
+	)
 
 	return pod, nil
 }
 
 func (k *Kube) deleteSession(ctx context.Context, info deletePod) error {
-	err := k.deleteCloudflaredConfigMap(ctx, info.sessionId)
-	if err != nil {
-		return err
+	if err := k.deleteCloudflaredConfigMap(ctx, info.sessionId); err != nil {
+		return recordKubeFailure(ctx, "delete_configmap", lifecyclePodDelete, err,
+			slog.String("session_id", info.sessionId),
+			slog.String("namespace", k.namespace),
+		)
 	}
 
 	pods, err := k.getPods(ctx, info.clientId)
 	if err != nil {
+		metrics.RecordPodDeleteFailure(kubeErrorCode(err))
 		return err
 	}
 
@@ -283,27 +137,44 @@ func (k *Kube) deleteSession(ctx context.Context, info deletePod) error {
 	}
 
 	if target == nil {
+		logger.WarnEvent(ctx, "pod_delete_skipped", "VNC pod delete skipped because pod was not found",
+			slog.String("session_id", info.sessionId),
+			slog.String("pod_name", info.sessionId),
+			slog.String("namespace", k.namespace),
+		)
 		return nil
 	}
+
+	logger.InfoEvent(ctx, "pod_delete_started", "VNC pod deletion started",
+		slog.String("session_id", info.sessionId),
+		slog.String("pod_name", info.sessionId),
+		slog.String("namespace", k.namespace),
+	)
 
 	if err := k.k8s.Clientset.CoreV1().
 		Pods(k.namespace).
 		Delete(ctx, info.sessionId, metav1.DeleteOptions{}); err != nil {
-
-		if statusErr, ok := err.(kerrors.APIStatus); ok {
-			st := statusErr.Status()
-			return fmt.Errorf("code=%d reason=%s message=%s", st.Code, st.Reason, st.Message)
-		}
-
-		return err
+		return recordKubeFailure(ctx, "delete_pod", lifecyclePodDelete, err,
+			slog.String("session_id", info.sessionId),
+			slog.String("pod_name", info.sessionId),
+			slog.String("namespace", k.namespace),
+		)
 	}
+
+	metrics.RecordPodDeleteSuccess()
+	metrics.DecActiveSessions()
+	logger.InfoEvent(ctx, "pod_delete_succeeded", "VNC pod deletion succeeded",
+		slog.String("session_id", info.sessionId),
+		slog.String("pod_name", info.sessionId),
+		slog.String("namespace", k.namespace),
+	)
 
 	return nil
 }
 
 func (k *Kube) createCloudflaredConfigMap(ctx context.Context, sessionId string) error {
 	configMapName := "cloudflared-config-" + sessionId
-	// NOTE: config.yml는 space로 구분된 포맷이므로 탭 문자를 사용하면 안됨
+	// config.yml는 공백 기반 포맷이라 탭 문자를 넣으면 안 됨.
 	config := fmt.Sprintf(`
 tunnel: %s
 credentials-file: /etc/cloudflared/credentials.json
@@ -318,54 +189,31 @@ ingress:
 			Namespace: k.namespace,
 			Name:      configMapName,
 		},
-		Data: map[string]string{
-			"config.yml": config,
-		},
+		Data: map[string]string{"config.yml": config},
 	}
 
 	_, err := k.k8s.Clientset.CoreV1().
 		ConfigMaps(k.namespace).
 		Create(ctx, configMap, metav1.CreateOptions{})
-	if err != nil {
-		if statusErr, ok := err.(kerrors.APIStatus); ok {
-			st := statusErr.Status()
-			return fmt.Errorf("code=%d reason=%s message=%s", st.Code, st.Reason, st.Message)
-		}
-		return err
-	}
-
-	return nil
+	return unwrapKubeStatus(err)
 }
 
 func (k *Kube) deleteCloudflaredConfigMap(ctx context.Context, sessionId string) error {
-	configMapName := "cloudflared-config-" + sessionId
-
-	if err := k.k8s.Clientset.CoreV1().
+	err := k.k8s.Clientset.CoreV1().
 		ConfigMaps(k.namespace).
-		Delete(ctx, configMapName, metav1.DeleteOptions{}); err != nil {
-
-		if statusErr, ok := err.(kerrors.APIStatus); ok {
-			st := statusErr.Status()
-			return fmt.Errorf("code=%d reason=%s message=%s", st.Code, st.Reason, st.Message)
-		}
-		return err
-	}
-
-	return nil
+		Delete(ctx, "cloudflared-config-"+sessionId, metav1.DeleteOptions{})
+	return unwrapKubeStatus(err)
 }
 
 func (k *Kube) secureRandomString(n int) string {
 	const letters = "abcdefghijklmnopqrstuvwxyz0123456789"
 
 	b := make([]byte, n)
-
 	if _, err := rand.Read(b); err != nil {
 		panic(err)
 	}
-
 	for i := range b {
 		b[i] = letters[int(b[i])%len(letters)]
 	}
-
 	return string(b)
 }

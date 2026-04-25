@@ -1,6 +1,7 @@
 package config
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"seolmyeong-tang-server/internal/pkg/logger"
@@ -29,25 +30,25 @@ func InitEnv() {
 	Env = loadEnv()
 
 	if err := validateEnv(Env); err != nil {
-		logger.Fatal(err, "environment validation failed")
+		logger.FatalEvent(context.Background(), "env_validation_failed", "environment validation failed", err)
 	}
 }
 
 func loadEnv() *env {
-	v := viper.New() // 전역 viper보다는 지역 인스턴스 사용 권장
+	v := viper.New()
 	v.SetConfigFile(".env")
 	v.SetConfigType("env")
 	v.AddConfigPath(".")
 
 	if err := v.ReadInConfig(); err != nil {
-		logger.Fatal(err, "Unable to read env file")
+		logger.FatalEvent(context.Background(), "env_read_failed", "unable to read env file", err)
 	}
 
 	v.AutomaticEnv()
 
 	var e env
 	if err := v.Unmarshal(&e); err != nil {
-		logger.Fatal(err, "Unable to unmarshal env file")
+		logger.FatalEvent(context.Background(), "env_unmarshal_failed", "unable to unmarshal env file", err)
 	}
 
 	return &e

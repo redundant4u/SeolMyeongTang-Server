@@ -1,23 +1,59 @@
 package logger
 
-import "log"
+import (
+	"context"
+	"log/slog"
+	"os"
+	"strings"
+)
 
-func Info(format string, args ...any) {
-	log.Printf("[INFO] "+format, args...)
-}
+const ServiceName = "smt-server"
 
-func Error(format string, err error) {
-	if err != nil {
-		log.Printf("[ERR] "+format+": %v", err)
-	} else {
-		log.Printf("[ERR] " + format)
+var base = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+	ReplaceAttr: func(_ []string, attr slog.Attr) slog.Attr {
+		switch attr.Key {
+		case slog.TimeKey:
+			attr.Key = "timestamp"
+		case slog.MessageKey:
+			attr.Key = "message"
+		case slog.LevelKey:
+			level := attr.Value.String()
+			attr.Value = slog.StringValue(strings.ToLower(level))
+		}
+		return attr
+	},
+})).With(
+	slog.String("service", ServiceName),
+)
+
+func Event(ctx context.Context, level slog.Level, eventType, message string, attrs ...slog.Attr) {
+	values := make([]any, 0, len(attrs)+5)
+	values = append(values, slog.String("event_type", eventType))
+	for _, attr := range CorrelationAttrs(ctx) {
+		values = append(values, attr)
 	}
+	for _, attr := range SafeAttrs(attrs...) {
+		values = append(values, attr)
+	}
+	base.Log(ctx, level, message, values...)
 }
 
-func Warn(format string) {
-	log.Printf("[WARN] " + format)
+func InfoEvent(ctx context.Context, eventType, message string, attrs ...slog.Attr) {
+	Event(ctx, slog.LevelInfo, eventType, message, attrs...)
 }
 
-func Fatal(err error, format string) {
-	log.Fatalf("[FATAL] "+format+": %v", err)
+func WarnEvent(ctx context.Context, eventType, message string, attrs ...slog.Attr) {
+	Event(ctx, slog.LevelWarn, eventType, message, attrs...)
+}
+
+func ErrorEvent(ctx context.Context, eventType, message string, err error, attrs ...slog.Attr) {
+	if err != nil {
+		attrs = append(attrs, slog.String("error", RedactString(err.Error())))
+	}
+	Event(ctx, slog.LevelError, eventType, message, attrs...)
+}
+
+func FatalEvent(ctx context.Context, eventType, message string, err error, attrs ...slog.Attr) {
+	ErrorEvent(ctx, eventType, message, err, attrs...)
+	os.Exit(1)
 }

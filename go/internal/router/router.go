@@ -1,9 +1,13 @@
 package router
 
 import (
+	"context"
+
 	"seolmyeong-tang-server/internal/api/post"
 	"seolmyeong-tang-server/internal/api/session"
+	"seolmyeong-tang-server/internal/pkg/httpobs"
 	"seolmyeong-tang-server/internal/pkg/logger"
+	"seolmyeong-tang-server/internal/pkg/metrics"
 	"seolmyeong-tang-server/internal/pkg/validator"
 
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
@@ -17,6 +21,7 @@ func New(ddb *dynamodb.Client, kube *session.Kube) *echo.Echo {
 	e.Validator = validator.New()
 
 	e.Use(middleware.Recover())
+	e.Use(httpobs.Middleware())
 
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: []string{"https://redundant4u.com"},
@@ -29,14 +34,18 @@ func New(ddb *dynamodb.Client, kube *session.Kube) *echo.Echo {
 		AllowHeaders: []string{
 			echo.HeaderContentType,
 			echo.HeaderAuthorization,
+			httpobs.HeaderRequestID,
+			httpobs.HeaderTraceID,
 			"X-Client-Id",
 		},
 	}))
 
+	e.GET("/metrics", echo.WrapHandler(metrics.Handler()))
+
 	session.Init(e, kube)
 	post.Init(e, ddb)
 
-	logger.Info("Router init")
+	logger.InfoEvent(context.Background(), "router_initialized", "Router initialized")
 
 	return e
 }

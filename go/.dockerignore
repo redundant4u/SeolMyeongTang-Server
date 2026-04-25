@@ -1,0 +1,11 @@
+.git/
+.dockerignore
+Dockerfile*
+.env*
+*.log*
+tmp/
+coverage/
+vendor/
+*.test
+*.out
+__pycache__/

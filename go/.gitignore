@@ -1,9 +1,15 @@
 __pycache__
 
 .env
+.env*
 tmp
 
 cf-warp-key.txt
 smt-secret.txt
 
 .DS_Store
+*.log
+*.out
+*.test
+*.exe
+vendor/

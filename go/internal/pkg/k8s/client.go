@@ -1,6 +1,7 @@
 package k8s
 
 import (
+	"context"
 	"fmt"
 	"seolmyeong-tang-server/internal/pkg/logger"
 
@@ -34,6 +35,6 @@ func NewClient(kubeconfig string) (*Client, error) {
 		return nil, fmt.Errorf("create kubernetes clientset: %w", err)
 	}
 
-	logger.Info("Kubernetes client initialized")
+	logger.InfoEvent(context.Background(), "kube_client_initialized", "Kubernetes client initialized")
 	return &Client{Clientset: clientSet}, nil
 }

@@ -20,7 +20,7 @@ func (h *handler) getPosts(c echo.Context) error {
 
 	posts, err := h.repo.getPosts(ctx)
 	if err != nil {
-		logger.Error("failed to get posts", err)
+		logger.ErrorEvent(ctx, "post_list_failed", "failed to get posts", err)
 		return response.BadRequest(c)
 	}
 
@@ -34,13 +34,13 @@ func (h *handler) getPost(c echo.Context) error {
 
 	postId := c.Param("postId")
 	if postId == "" {
-		logger.Error("postId is required", nil)
+		logger.WarnEvent(ctx, "post_id_missing", "postId is required")
 		return response.BadRequest(c)
 	}
 
 	post, err := h.repo.getPost(ctx, postId)
 	if err != nil {
-		logger.Error("failed to get post", err)
+		logger.ErrorEvent(ctx, "post_fetch_failed", "failed to get post", err)
 		return response.BadRequest(c)
 	}
 

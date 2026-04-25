@@ -1,6 +1,7 @@
 package session
 
 import (
+	"context"
 	"fmt"
 	"seolmyeong-tang-server/internal/pkg/logger"
 	"time"
@@ -96,7 +97,7 @@ func extractTTL(pod *corev1.Pod) int64 {
 	if expiredAtStr, ok := pod.Annotations["expired-at"]; ok {
 		expiredAt, err := time.Parse(time.RFC3339, expiredAtStr)
 		if err != nil {
-			logger.Error("pod annotation expired-at is invalid", err)
+			logger.ErrorEvent(context.Background(), "expired_at_parse_failed", "pod annotation expired-at is invalid", err)
 			return 0
 		}
 

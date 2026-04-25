@@ -14,8 +14,9 @@ import (
 )
 
 func Initddb() (*dynamodb.Client, error) {
+	ctx := context.Background()
 	awsCfg, err := config.LoadDefaultConfig(
-		context.Background(),
+		ctx,
 		config.WithRegion(appConfig.Env.AWS_REGION),
 		config.WithCredentialsProvider(
 			credentials.NewStaticCredentialsProvider(
@@ -26,19 +27,18 @@ func Initddb() (*dynamodb.Client, error) {
 		),
 	)
 	if err != nil {
-		logger.Fatal(err, "failed to load aws config")
+		logger.FatalEvent(ctx, "aws_config_load_failed", "failed to load aws config", err)
 		return nil, err
 	}
 
 	client := dynamodb.NewFromConfig(awsCfg)
 
-	err = pingddb(context.Background(), client)
-	if err != nil {
-		logger.Fatal(err, "failed to connect to dynamodb")
+	if err := pingddb(ctx, client); err != nil {
+		logger.FatalEvent(ctx, "dynamodb_ping_failed", "failed to connect to dynamodb", err)
 		return nil, err
 	}
 
-	logger.Info("connect to dynamodb")
+	logger.InfoEvent(ctx, "dynamodb_connected", "connected to dynamodb")
 
 	return client, nil
 }
