@@ -32,15 +32,15 @@ func TestClientDisplayIDShortensLongIdentifiers(t *testing.T) {
 }
 
 func TestRedactStringScrubsNovncAndBearerMaterial(t *testing.T) {
-	cases := []string{
-		"failed to reach https://redundant4u.com/?novnc_token=abc123",
-		"Authorization: Bearer eyJhbGciOi",
-		"api_key=supersecret",
-		"bearer xyz",
+	cases := []struct{ input, want string }{
+		{"failed to reach https://redundant4u.com/?novnc_token=abc123", "failed to reach https://redundant4u.com/?[REDACTED]"},
+		{"api_key=supersecret", "[REDACTED]"},
+		{"bearer xyz", "[REDACTED]"},
+		{"normal provider message", "normal provider message"},
 	}
-	for _, in := range cases {
-		if got := RedactString(in); got == in {
-			t.Fatalf("expected redaction for %q, got %q", in, got)
+	for _, tc := range cases {
+		if got := RedactString(tc.input); got != tc.want {
+			t.Fatalf("redaction mismatch: want %q, got %q", tc.want, got)
 		}
 	}
 }
